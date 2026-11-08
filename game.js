@@ -264,9 +264,8 @@ function renderLanes() {
 
   for (let i = 0; i < CONFIG.laneNames.length; i++) {
     const $lane = $('#lane-' + i);
-    // いったん中身を空にして、マスの名前から作り直す
+    // いったん中身を空にして、作り直す
     $lane.empty();
-    $lane.append($('<span class="lane-name"></span>').text(CONFIG.laneNames[i]));
 
     // ぶつかったマスには is-hit クラスを付けて、赤く目立たせる（CSS で見た目を決める）
     const isHitLane = state.lastResult !== null && state.lastResult.isHit && state.lastResult.enemyLane === i;
