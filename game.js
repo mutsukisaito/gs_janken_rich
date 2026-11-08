@@ -66,9 +66,12 @@ function playNormalTurn(lane) {
   state.lastResult = { lane: lane, enemyLane: enemyLane, enemy: enemy, isHit: isHit };
   render();
 
-  // 歩数がクリアに必要な歩数に届いたら、ステージクリア
-  // （ボス戦があるステージは、クリアではなくボス戦になる。それは S7 で作る）
-  if (state.step >= CONFIG.maxSteps && !CONFIG.stages[state.stageIndex].hasBoss) {
+  if (state.hp <= 0) {
+    // 体力が0以下なら、ゲームオーバー画面へ
+    showScreen('screen-gameover');
+  } else if (state.step >= CONFIG.maxSteps && !CONFIG.stages[state.stageIndex].hasBoss) {
+    // 歩数がクリアに必要な歩数に届いたら、ステージクリア
+    // （ボス戦があるステージは、クリアではなくボス戦になる。それは S7 で作る）
     clearStage();
     renderClear();
     showScreen('screen-clear');
@@ -88,6 +91,15 @@ function clearStage() {
 
   // 2. クリア回復：体力を増やす（上限は超えない）
   state.hp = Math.min(state.maxHp, state.hp + CONFIG.clearHeal);
+}
+
+// リトライの関数（体力を上限まで回復して、同じステージを0歩目から始め直す）
+// 仲間とステージ番号は変えないので、仲間は減らない
+// 受け取る値：なし　返す値：なし
+function retryStage() {
+  state.hp = state.maxHp;
+  // 「ステージを始める処理」を使い回す
+  startStage();
 }
 
 // 次のステージに進む関数（ステージ番号を1つ進めて、0歩目から始める）
@@ -268,6 +280,13 @@ $(function () {
   // [次のステージへ] を押したら、次のステージを始めてゲーム画面を表示する
   $('#btn-next').on('click', function () {
     nextStage();
+    render();
+    showScreen('screen-game');
+  });
+
+  // [リトライ] を押したら、同じステージをやり直してゲーム画面を表示する
+  $('#btn-retry').on('click', function () {
+    retryStage();
     render();
     showScreen('screen-game');
   });
