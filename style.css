@@ -169,8 +169,8 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.35); /* 背景画像が透けて見える */
-  border: 2px solid #bbb;
+  background: transparent;           /* ふだんは枠も背景も透明（ぶつかったときだけ .is-hit で赤くなる） */
+  border: 2px solid transparent;     /* 枠の太さは残して、赤くなったときにマスがずれないようにする */
   border-radius: 12px;
 }
 
