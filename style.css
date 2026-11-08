@@ -402,3 +402,25 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .confetti { display: none; }
 }
+
+/* ---------- ぶつかったときの震え（CSS アニメーションだけ。JavaScript・setTimeout は使わない） ---------- */
+/* ぶつかったマスの桃太郎（後ろの仲間も同じグループ）が、一瞬ブルっと震える。マスは描画のたびに作り直されるので、毎回動く */
+.lane.is-hit .player-group {
+  animation: hit-shake 0.4s ease-in-out;
+}
+
+/* 左右に細かく揺れて、元の位置に戻る（transform だけを動かすので軽い） */
+@keyframes hit-shake {
+  0%   { transform: translateX(0); }
+  15%  { transform: translateX(-7px) rotate(-2deg); }
+  30%  { transform: translateX(7px)  rotate(2deg); }
+  45%  { transform: translateX(-5px) rotate(-1deg); }
+  60%  { transform: translateX(5px)  rotate(1deg); }
+  80%  { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
+/* 動きを減らす設定のときは、震えさせない */
+@media (prefers-reduced-motion: reduce) {
+  .lane.is-hit .player-group { animation: none; }
+}
