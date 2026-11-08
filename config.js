@@ -37,7 +37,11 @@ const CONFIG = {
       pain:   'img/img_face_pain.png',
       happy:  'img/img_face_happy.png'
     },
-    bgRoad: 'img/img_bg_road.jpg'           // プレイエリアの背景（通常ステージ）
+    bgRoad: 'img/img_bg_road.jpg',          // プレイエリアの背景（通常ステージ）
+    bgBoss: 'img/img_bg_boss.jpg',          // プレイエリアの背景（ボス戦）
+    sceneStart:    'img/img_scene_start.jpg',    // タイトル画面
+    sceneGameover: 'img/img_scene_gameover.jpg', // ゲームオーバー画面
+    sceneEnding:   'img/img_scene_ending.jpg'    // エンディング画面
   },
 
   // ラスボスの設定
@@ -46,6 +50,7 @@ const CONFIG = {
     hp: 300,             // ボスの体力
     attackDamage: 30,    // ボスの攻撃が当たったときに、プレイヤーが受けるダメージ
     counterDamage: 20,   // プレイヤーの反撃でボスが受けるダメージ
-    color: '#6a1b9a'
+    color: '#6a1b9a',
+    image: 'img/img_boss.png'  // ボスの画像
   }
 };

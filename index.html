@@ -13,6 +13,7 @@
 
     <!-- タイトル画面 -->
     <section id="screen-title" class="screen is-active">
+      <img id="scene-start" class="scene-img" src="" alt="">
       <h1 class="title-text">桃太郎の鬼退治</h1>
       <p class="description">左・中央・右の3マスから1つを選んで、鬼を避けながら進もう。<br>仲間と力を合わせて、でかい鬼をやっつけよう！</p>
       <button id="btn-start" class="btn btn-main">スタート</button>
@@ -73,6 +74,7 @@
 
     <!-- ゲームオーバー画面 -->
     <section id="screen-gameover" class="screen">
+      <img id="scene-gameover" class="scene-img" src="" alt="">
       <h2 class="screen-title">ゲームオーバー</h2>
       <button id="btn-retry" class="btn btn-main">リトライ</button>
       <button id="btn-title-gameover" class="btn btn-sub">タイトルへ</button>
@@ -80,8 +82,9 @@
 
     <!-- エンディング画面 -->
     <section id="screen-ending" class="screen">
+      <img id="scene-ending" class="scene-img" src="" alt="">
       <h2 class="screen-title">鬼たいじ成功！</h2>
-      <p id="ending-allies" class="description">仲間：犬・猿・雉</p>
+      <div id="ending-allies" class="ending-allies"></div>
       <button id="btn-title-ending" class="btn btn-main">タイトルへ</button>
     </section>
 

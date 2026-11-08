@@ -277,7 +277,10 @@ function renderLanes() {
       const enemy = state.lastResult.enemy;
       if (enemy.image) {
         // 画像がある鬼は、画像を出す（表示できないときは alt の名前が出る）
-        $lane.append($('<img class="enemy-img">').attr('src', enemy.image).attr('alt', enemy.name));
+        const $enemyImg = $('<img class="enemy-img">').attr('src', enemy.image).attr('alt', enemy.name);
+        // ボス戦のボスは、鬼より大きく表示する（CSS の boss-img）
+        $enemyImg.toggleClass('boss-img', state.lastResult.isBoss === true);
+        $lane.append($enemyImg);
       } else {
         // 画像がない敵（ボスなど）は、今までどおり色付きの箱と名前を出す
         $lane.append($('<div class="enemy-box"></div>').text(enemy.name).css('background', enemy.color));
@@ -303,10 +306,22 @@ function renderLanes() {
   }
 }
 
-// プレイエリアの背景画像を表示する関数（画像のパスは CONFIG.images から読む）
+// プレイエリアの背景画像を表示する関数（ボス戦かどうかで、道とボス戦の背景を切り替える）
 // 受け取る値：なし　返す値：なし
 function renderBackground() {
-  $('#play-area').css('background-image', 'url("' + CONFIG.images.bgRoad + '")');
+  let bg = CONFIG.images.bgRoad;
+  if (state.isBossBattle) {
+    bg = CONFIG.images.bgBoss;
+  }
+  $('#play-area').css('background-image', 'url("' + bg + '")');
+}
+
+// タイトル・ゲームオーバー・エンディング画面の画像を設定する関数（state は使わない。起動時に1回呼ぶ）
+// 受け取る値：なし　返す値：なし
+function renderSceneImages() {
+  $('#scene-start').attr('src', CONFIG.images.sceneStart).attr('alt', '桃太郎と仲間たち');
+  $('#scene-gameover').attr('src', CONFIG.images.sceneGameover).attr('alt', 'やられた桃太郎');
+  $('#scene-ending').attr('src', CONFIG.images.sceneEnding).attr('alt', 'みんなで勝利のお祝い');
 }
 
 // 体力ゲージを表示する関数
@@ -403,10 +418,16 @@ function renderClear() {
   $('#clear-hp').text('体力：' + state.hp + ' / ' + state.maxHp);
 }
 
-// エンディング画面の文字を表示する関数（仲間全員の名前）
+// エンディング画面の仲間を表示する関数（仲間全員の顔アイコンを並べる。「仲間」の文字は出さない）
 // 受け取る値：なし　返す値：なし
 function renderEnding() {
-  $('#ending-allies').text('仲間：' + state.allies.join('・'));
+  const $allies = $('#ending-allies');
+  $allies.empty();
+  // 仲間の数だけ、顔アイコンを並べる（表示できないときは alt の名前が出る）
+  for (let i = 0; i < state.allies.length; i++) {
+    const ally = findAllyByName(state.allies[i]);
+    $allies.append($('<img class="ally-face">').attr('src', ally.face).attr('alt', ally.name));
+  }
 }
 
 // ---------- ボタンとの結びつけ ----------
@@ -415,6 +436,9 @@ function renderEnding() {
 $(function () {
   // 動作確認用：コンソールにメッセージを出す
   console.log('起動しました');
+
+  // タイトル・ゲームオーバー・エンディングの画像を設定する
+  renderSceneImages();
 
   // [スタート] を押したら、ゲームを初期化してゲーム画面を表示する
   $('#btn-start').on('click', function () {

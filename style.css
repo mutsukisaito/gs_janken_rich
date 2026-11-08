@@ -7,7 +7,11 @@
 
 body {
   margin: 0;
-  background: #2d3a4a; /* PCで見たときの左右の余白（単色。背景画像は提出後） */
+  background: #2d3a4a; /* 画像が読み込めないときの色 */
+  background-image: url('img/img_bg_pc.jpg'); /* PCで見たときの左右の余白 */
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   font-family: sans-serif;
   color: #222;
 }
@@ -333,4 +337,30 @@ body {
 .btn:active {
   transform: scale(0.96);
   filter: brightness(0.9);
+}
+
+/* タイトル・ゲームオーバー・エンディングの画像：画面幅いっぱい、縦横比は保つ */
+.scene-img {
+  width: 100%;
+  max-height: 45%;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+/* ボス戦のボス：鬼より大きく表示する */
+.enemy-img.boss-img {
+  max-height: 60%;
+  width: 130%;
+}
+
+/* エンディングの仲間：顔アイコンを大きめに、横に並べる */
+.ending-allies {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.ending-allies .ally-face {
+  width: 56px;
+  height: 56px;
 }
