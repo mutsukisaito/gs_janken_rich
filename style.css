@@ -77,14 +77,14 @@ body {
 .btn-main {
   width: 80%;
   height: 56px;
-  background: #e8590c;
+  background: #F58F98; /* 桃太郎の桃色 */
   color: #fff;
 }
 
 .btn-sub {
   width: 80%;
   height: 48px;
-  background: #ccc;
+  background: #fff;
   color: #222;
 }
 
@@ -92,7 +92,7 @@ body {
   height: 36px;
   padding: 0 12px;
   font-size: 14px;
-  background: #ccc;
+  background: #F2DFBB;
   color: #222;
 }
 
@@ -101,7 +101,7 @@ body {
   flex: 1;
   height: 64px;
   font-size: 28px;
-  background: #e8590c;
+  background: #F58F98; /* 桃太郎の桃色 */
   color: #fff;
 }
 
