@@ -150,6 +150,9 @@ body {
   display: flex;
   gap: 8px;
   min-height: 120px;
+  background-size: cover;      /* 背景画像は縦横比を保って全体を覆う */
+  background-position: center;
+  border-radius: 12px;
 }
 
 .lane {
@@ -159,7 +162,7 @@ body {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.35); /* 背景画像が透けて見える */
   border: 2px solid #bbb;
   border-radius: 12px;
 }
@@ -182,8 +185,9 @@ body {
 
 .face {
   flex: none;
-  width: 56px;
-  height: 56px;
+  width: 68px;
+  height: 68px;
+  overflow: hidden;
   border-radius: 50%;
   background: #ffe082;
   display: flex;
@@ -228,10 +232,27 @@ body {
   background: #f06595; /* 桃色 */
 }
 
-/* ぶつかったマスを赤く目立たせる */
+/* ぶつかったマスを赤く目立たせる（背景画像が見えるよう、半透明の赤） */
 .lane.is-hit {
   border-color: #e53935;
-  background: #ffebee;
+  background: rgba(229, 57, 53, 0.25);
+}
+
+/* 鬼・桃太郎の画像：縦横比を崩さず、マスの幅いっぱいに表示する */
+.enemy-img,
+.player-img {
+  width: 100%;
+  min-height: 0;
+  flex: 0 1 auto;
+  max-height: 45%;
+  object-fit: contain;
+}
+
+/* 顔アイコンの画像：円の中に縦横比を保って収める */
+.face-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 /* 明るい色の鬼（黄鬼など）でも名前が読めるように、文字に影を付ける */

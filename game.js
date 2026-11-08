@@ -205,6 +205,7 @@ function showScreen(screenId) {
 function render() {
   renderHeader();
   renderProgress();
+  renderBackground();
   renderLanes();
   renderHp();
   renderMessage();
@@ -258,17 +259,29 @@ function renderLanes() {
     const isHitLane = state.lastResult !== null && state.lastResult.isHit && state.lastResult.enemyLane === i;
     $lane.toggleClass('is-hit', isHitLane);
 
-    // 鬼がいるマスなら、色付きの箱と名前を出す（鬼の出現は S4 で作る）
+    // 鬼がいるマスなら、鬼を出す
     if (state.lastResult !== null && state.lastResult.enemyLane === i) {
       const enemy = state.lastResult.enemy;
-      $lane.append($('<div class="enemy-box"></div>').text(enemy.name).css('background', enemy.color));
+      if (enemy.image) {
+        // 画像がある鬼は、画像を出す（表示できないときは alt の名前が出る）
+        $lane.append($('<img class="enemy-img">').attr('src', enemy.image).attr('alt', enemy.name));
+      } else {
+        // 画像がない敵（ボスなど）は、今までどおり色付きの箱と名前を出す
+        $lane.append($('<div class="enemy-box"></div>').text(enemy.name).css('background', enemy.color));
+      }
     }
 
-    // プレイヤーのいるマスなら、桃を出す
+    // プレイヤーのいるマスなら、桃太郎の画像を出す
     if (i === playerLane) {
-      $lane.append($('<div class="player-box"></div>').text('桃'));
+      $lane.append($('<img class="player-img">').attr('src', CONFIG.images.playerBack).attr('alt', '桃太郎'));
     }
   }
+}
+
+// プレイエリアの背景画像を表示する関数（画像のパスは CONFIG.images から読む）
+// 受け取る値：なし　返す値：なし
+function renderBackground() {
+  $('#play-area').css('background-image', 'url("' + CONFIG.images.bgRoad + '")');
 }
 
 // 体力ゲージを表示する関数
@@ -286,38 +299,43 @@ function renderMessage() {
   if (result === null) {
     // まだ1回も選んでいない（初期状態）
     $('#message').text('マスを選んでね');
-    $('#face').text('普通');
   } else if (result.isBoss && result.isDefeated) {
     // ボス戦でやられた
     $('#message').text('やられた…もう一度挑戦！');
-    $('#face').text('痛い');
   } else if (result.isBoss && result.isHit) {
     // ボス戦：被弾
     $('#message').text(CONFIG.boss.name + 'の攻撃を受けた！ 体力-' + CONFIG.boss.attackDamage);
-    $('#face').text('痛い');
   } else if (result.isBoss) {
     // ボス戦：回避＋反撃
     $('#message').text('反撃！ ボスに' + CONFIG.boss.counterDamage + 'のダメージ');
-    $('#face').text('嬉しい');
   } else if (result.isHit) {
     // 当たり
     $('#message').text(result.enemy.name + 'にぶつかった！ 体力-' + result.enemy.damage + '、1歩後退');
-    $('#face').text('痛い');
   } else {
     // 回避
     $('#message').text('かわした！ 1歩前進');
-    $('#face').text('嬉しい');
   }
 
-  // 状態に応じて、顔とメッセージのクラスを付け替える（色は CSS で決まる）
+  // 状態に応じて、顔の種類を決める（CONFIG.images.faces のキーと、顔の説明文）
   let mood = 'normal';
+  let faceKey = 'normal';
+  let faceAlt = '普通';
   if (result !== null) {
     if (result.isHit || result.isDefeated) {
       mood = 'hit';    // 当たり・被弾・やられた
+      faceKey = 'pain';
+      faceAlt = '痛い';
     } else {
       mood = 'happy';  // 回避・反撃
+      faceKey = 'happy';
+      faceAlt = '嬉しい';
     }
   }
+
+  // 顔アイコンの画像を差し替える（表示できないときは alt の文字が出る）
+  $('#face-img').attr('src', CONFIG.images.faces[faceKey]).attr('alt', faceAlt);
+
+  // 顔とメッセージのクラスを付け替える（色は CSS で決まる）
   $('#face, #message').removeClass('mood-normal mood-hit mood-happy').addClass('mood-' + mood);
 }
 

@@ -17,10 +17,21 @@ const CONFIG = {
 
   // 敵の一覧。敵を増やすときは、ここに1行足す
   enemies: [
-    { name: '青鬼', damage: 10, color: '#2b6cff' },
-    { name: '赤鬼', damage: 20, color: '#e53935' },
-    { name: '黄鬼', damage: 30, color: '#f9a825' }
+    { name: '青鬼', damage: 10, color: '#2b6cff', image: 'img/img_oni_blue.png' },
+    { name: '赤鬼', damage: 20, color: '#e53935', image: 'img/img_oni_red.png' },
+    { name: '黄鬼', damage: 30, color: '#f9a825', image: 'img/img_oni_yellow.png' }
   ],
+
+  // 画像のファイル名をまとめた設定。画像を差し替えるときは、ここだけを書き換える
+  images: {
+    playerBack: 'img/img_player_back.png',  // 選んだマスに立つ桃太郎
+    faces: {                                // 顔アイコン（初期＝normal、当たり＝pain、回避＝happy）
+      normal: 'img/img_face_normal.png',
+      pain:   'img/img_face_pain.png',
+      happy:  'img/img_face_happy.png'
+    },
+    bgRoad: 'img/img_bg_road.jpg'           // プレイエリアの背景（通常ステージ）
+  },
 
   // ラスボスの設定
   boss: {
