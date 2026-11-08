@@ -9,9 +9,16 @@ const CONFIG = {
 
   // ステージの一覧。ステージを増やすときは、ここに1行足す
   stages: [
-    { name: 'ステージ1', ally: { name: '犬', hpBonus: 50 },  hasBoss: false },
-    { name: 'ステージ2', ally: { name: '猿', hpBonus: 50 },  hasBoss: false },
-    { name: 'ステージ3', ally: { name: '雉', hpBonus: 100 }, hasBoss: false },
+    // ally.face … 仲間表示の顔アイコン／ally.back … 桃太郎の後ろをついてくる姿／clearScene … クリア画面の再会シーン
+    { name: 'ステージ1',
+      ally: { name: '犬', hpBonus: 50,  face: 'img/face_dog.png',      back: 'img/img_ally_dog_back.png' },
+      clearScene: 'img/img_scene_clear1.jpg', hasBoss: false },
+    { name: 'ステージ2',
+      ally: { name: '猿', hpBonus: 50,  face: 'img/face_monkey.png',   back: 'img/img_ally_monkey_back.png' },
+      clearScene: 'img/img_scene_clear2.jpg', hasBoss: false },
+    { name: 'ステージ3',
+      ally: { name: '雉', hpBonus: 100, face: 'img/face_pheasant.png', back: 'img/img_ally_pheasant_back.png' },
+      clearScene: 'img/img_scene_clear3.jpg', hasBoss: false },
     { name: 'ステージ4', ally: null,                          hasBoss: true  }
   ],
 

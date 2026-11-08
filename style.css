@@ -156,7 +156,9 @@ body {
 }
 
 .lane {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;      /* 中の画像が大きくても、3マスの幅を等しく保つ */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -246,6 +248,66 @@ body {
   flex: 0 1 auto;
   max-height: 45%;
   object-fit: contain;
+}
+
+/* 桃太郎と、後ろをついてくる仲間たち。
+   仲間は桃太郎の少し後ろ（下）に置く。1体＝真後ろ／2体＝犬と猿が横並び／3体＝犬と猿の後ろに雉 */
+.player-group {
+  position: relative;
+  width: 100%;
+}
+
+.player-group .player-img {
+  display: block;
+  width: 100%;
+  max-height: none;
+  height: auto;
+}
+
+/* 仲間がいるとき：桃太郎を大きくして、仲間が並ぶ分の余白を下にあける */
+.player-group.has-allies {
+  margin-bottom: 30%;
+}
+
+.player-group.has-allies .player-img {
+  width: 125%;
+  margin-left: -12.5%;
+}
+
+.player-group .ally-img {
+  position: absolute;
+  width: 45%;
+  height: auto;
+}
+
+/* 位置：ally-pos-（仲間の人数）-（何番目か。0=犬, 1=猿, 2=雉） */
+.ally-pos-1-0 { left: 27%; top: 76%; }
+.ally-pos-2-0 { left: 2%;  top: 76%; }
+.ally-pos-2-1 { left: 53%; top: 76%; }
+.ally-pos-3-0 { left: 2%;  top: 74%; }
+.ally-pos-3-1 { left: 53%; top: 74%; }
+.ally-pos-3-2 { left: 27%; top: 100%; width: 42%; }
+
+/* 仲間表示：顔アイコンを横に並べる */
+.allies {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ally-face {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: contain;
+}
+
+/* クリア画面の再会シーン：画面幅いっぱい */
+.clear-scene {
+  width: 100%;
+  max-height: 50%;
+  object-fit: contain;
+  border-radius: 12px;
 }
 
 /* 顔アイコンの画像：円の中に縦横比を保って収める */

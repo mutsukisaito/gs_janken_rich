@@ -188,6 +188,19 @@ function pickRandomEnemy() {
   return CONFIG.enemies[getRandomInt(CONFIG.enemies.length)];
 }
 
+// 仲間の名前から、CONFIG にある仲間のデータ（顔・後ろ姿の画像など）を探して返す関数
+// 受け取る値：name … 仲間の名前（例：'犬'）
+// 返す値：仲間のデータ（見つからなければ null）
+function findAllyByName(name) {
+  for (let i = 0; i < CONFIG.stages.length; i++) {
+    const ally = CONFIG.stages[i].ally;
+    if (ally !== null && ally.name === name) {
+      return ally;
+    }
+  }
+  return null;
+}
+
 // ---------- 画面に表示する関数（state を読むだけで、state は変えない） ----------
 
 // 指定した画面だけを表示する関数
@@ -271,9 +284,21 @@ function renderLanes() {
       }
     }
 
-    // プレイヤーのいるマスなら、桃太郎の画像を出す
+    // プレイヤーのいるマスなら、桃太郎の画像を出す（仲間がいれば、全員が後ろをついてくる）
     if (i === playerLane) {
-      $lane.append($('<img class="player-img">').attr('src', CONFIG.images.playerBack).attr('alt', '桃太郎'));
+      const $group = $('<div class="player-group"></div>');
+      $group.append($('<img class="player-img">').attr('src', CONFIG.images.playerBack).attr('alt', '桃太郎'));
+      if (state.allies.length > 0) {
+        // 仲間がいるときは、桃太郎も仲間も大きく表示する（CSS の has-allies で決まる）
+        $group.addClass('has-allies');
+        // 仲間の数だけ後ろ姿を並べる。位置は「仲間の人数-何番目か」のクラスで決まる（CSS）
+        for (let j = 0; j < state.allies.length; j++) {
+          const ally = findAllyByName(state.allies[j]);
+          const posClass = 'ally-pos-' + state.allies.length + '-' + j;
+          $group.append($('<img class="ally-img">').addClass(posClass).attr('src', ally.back).attr('alt', ally.name));
+        }
+      }
+      $lane.append($group);
     }
   }
 }
@@ -342,11 +367,19 @@ function renderMessage() {
 // 仲間の表示を更新する関数
 // 受け取る値：なし　返す値：なし
 function renderAllies() {
+  const $allies = $('#allies');
+  // いったん空にして、「仲間：」の文字から作り直す
+  $allies.empty();
+  $allies.append($('<span class="allies-label"></span>').text('仲間：'));
+
   if (state.allies.length === 0) {
-    $('#allies').text('仲間：なし');
+    $allies.append($('<span></span>').text('なし'));
   } else {
-    // 仲間の名前を「・」でつなげて表示する（例：犬・猿）
-    $('#allies').text('仲間：' + state.allies.join('・'));
+    // 仲間の数だけ、顔アイコンを並べる（表示できないときは alt の名前が出る）
+    for (let i = 0; i < state.allies.length; i++) {
+      const ally = findAllyByName(state.allies[i]);
+      $allies.append($('<img class="ally-face">').attr('src', ally.face).attr('alt', ally.name));
+    }
   }
 }
 
@@ -360,6 +393,12 @@ function renderClear() {
     $('#clear-ally').text(stage.ally.name + 'が仲間になった！');
   } else {
     $('#clear-ally').text('');
+  }
+  // 再会シーンの画像を出す（画像が設定されていないステージでは隠す）
+  if (stage.clearScene) {
+    $('#clear-scene').attr('src', stage.clearScene).attr('alt', stage.ally ? stage.ally.name + 'との再会' : '').show();
+  } else {
+    $('#clear-scene').hide();
   }
   $('#clear-hp').text('体力：' + state.hp + ' / ' + state.maxHp);
 }

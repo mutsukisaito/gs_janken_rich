@@ -63,7 +63,7 @@ images: {
 | ファイル | 使う場所 | 表示サイズの目安 |
 |---|---|---|
 | `face_dog.png` / `face_monkey.png` / `face_pheasant.png` | ゲーム画面の仲間表示（**文字の代わりに顔アイコンを並べる**） | 直径32〜40px |
-| `img_ally_dog_back.png` / `img_ally_monkey_back.png` / `img_ally_pheasant_back.png` | 桃太郎の後ろをついてくる仲間（いちばん新しく加わった1体だけでよい） | 桃太郎の半分くらい |
+| `img_ally_dog_back.png` / `img_ally_monkey_back.png` / `img_ally_pheasant_back.png` | 桃太郎の後ろをついてくる仲間（**仲間になった全員**を桃太郎の右下に重ねて並べる。仲間がいるときは桃太郎も1.5倍に拡大） | 桃太郎の半分くらい |
 | `img_scene_clear1.jpg` / `img_scene_clear2.jpg` / `img_scene_clear3.jpg` | クリア画面の再会シーン（ステージ1・2・3） | 画面幅いっぱい |
 
 - 完成したときの状態：ステージをクリアすると再会シーンが出て、ゲーム画面の仲間表示に顔アイコンが増えていく
