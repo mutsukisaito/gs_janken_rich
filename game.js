@@ -35,6 +35,55 @@ function startStage() {
   state.lastResult = null;
 }
 
+// ボタンが押されたときの入口の関数。今は通常ステージの処理だけ呼ぶ（ボス戦への振り分けは S7 で作る）
+// 受け取る値：lane … 選んだマス番号（0=左, 1=中央, 2=右）
+// 返す値：なし
+function handleLaneSelect(lane) {
+  playNormalTurn(lane);
+}
+
+// 通常ステージの1ターンの処理をする関数
+// 受け取る値：lane … 選んだマス番号（0, 1, 2）
+// 返す値：なし
+function playNormalTurn(lane) {
+  // 鬼のマスと、鬼の種類をランダムに決める
+  const enemyLane = getRandomInt(CONFIG.laneNames.length);
+  const enemy = pickRandomEnemy();
+
+  // 選んだマスと鬼のマスが同じなら「当たり」
+  const isHit = (lane === enemyLane);
+
+  if (isHit) {
+    // 当たり：体力を減らして、1歩後退（0歩より小さくしない）
+    state.hp = Math.max(0, state.hp - enemy.damage);
+    state.step = Math.max(0, state.step - 1);
+  } else {
+    // 回避：1歩前進
+    state.step = state.step + 1;
+  }
+
+  // 結果を保存して、画面を更新する
+  state.lastResult = { lane: lane, enemyLane: enemyLane, enemy: enemy, isHit: isHit };
+  render();
+}
+
+// ---------- 補助の関数 ----------
+
+// 0 から max-1 までのランダムな整数を返す関数
+// 受け取る値：max … 上限（この値は含まない）
+// 返す値：整数（例：max が 3 なら 0, 1, 2 のどれか）
+function getRandomInt(max) {
+  // Math.random() は 0以上1未満の小数。max をかけて小数点を切り捨てる
+  return Math.floor(Math.random() * max);
+}
+
+// CONFIG.enemies から鬼を1体ランダムに返す関数
+// 受け取る値：なし
+// 返す値：鬼のデータ（例：{ name: '青鬼', damage: 10, color: '#2b6cff' }）
+function pickRandomEnemy() {
+  return CONFIG.enemies[getRandomInt(CONFIG.enemies.length)];
+}
+
 // ---------- 画面に表示する関数（state を読むだけで、state は変えない） ----------
 
 // 指定した画面だけを表示する関数
@@ -125,9 +174,20 @@ function renderHp() {
 // メッセージと顔アイコンを表示する関数
 // 受け取る値：なし　返す値：なし
 function renderMessage() {
-  // 当たり・回避のメッセージと顔は S4・S9 で作る。今は初期状態だけ
-  $('#message').text('マスを選んでね');
-  $('#face').text('普通');
+  const result = state.lastResult;
+  if (result === null) {
+    // まだ1回も選んでいない（初期状態）
+    $('#message').text('マスを選んでね');
+    $('#face').text('普通');
+  } else if (result.isHit) {
+    // 当たり
+    $('#message').text(result.enemy.name + 'にぶつかった！ 体力-' + result.enemy.damage + '、1歩後退');
+    $('#face').text('痛い');
+  } else {
+    // 回避
+    $('#message').text('かわした！ 1歩前進');
+    $('#face').text('嬉しい');
+  }
 }
 
 // 仲間の表示を更新する関数
@@ -154,6 +214,11 @@ $(function () {
     startStage();
     render();
     showScreen('screen-game');
+  });
+
+  // ◀ ▲ ▶ のボタンを押したら、そのボタンの順番（0, 1, 2）をマス番号として渡す
+  $('.btn-lane').on('click', function () {
+    handleLaneSelect($('.btn-lane').index(this));
   });
 
   // 3か所ある [タイトルへ]（ゲーム・ゲームオーバー・エンディング）を押したら、タイトル画面に戻る
