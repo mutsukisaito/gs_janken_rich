@@ -424,3 +424,23 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .lane.is-hit .player-group { animation: none; }
 }
+
+/* ---------- 大きいボタン（スタート・リトライ・次のステージへ・タイトルへ）：タップすると、ふわっと大きくなる ---------- */
+/* 押している間だけ大きくなり、指を離すと、ゆっくり元の大きさに戻る（transition だけ。JavaScript・setTimeout は使わない） */
+.btn-main,
+.btn-sub {
+  transition: transform 0.25s ease-out;
+}
+
+.btn-main:active,
+.btn-sub:active {
+  transform: scale(1.08);
+}
+
+/* 動きを減らす設定のときは、大きくならず、すぐ反応する */
+@media (prefers-reduced-motion: reduce) {
+  .btn-main,
+  .btn-sub { transition: none; }
+  .btn-main:active,
+  .btn-sub:active { transform: none; }
+}
