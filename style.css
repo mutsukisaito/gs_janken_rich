@@ -203,3 +203,17 @@ body {
   display: flex;
   gap: 8px;
 }
+
+/* 鬼とプレイヤーの表示（マスの中） */
+.enemy-box,
+.player-box {
+  padding: 8px 6px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.player-box {
+  background: #f06595; /* 桃色 */
+}
