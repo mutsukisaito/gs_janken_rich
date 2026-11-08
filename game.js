@@ -65,6 +65,36 @@ function playNormalTurn(lane) {
   // 結果を保存して、画面を更新する
   state.lastResult = { lane: lane, enemyLane: enemyLane, enemy: enemy, isHit: isHit };
   render();
+
+  // 歩数がクリアに必要な歩数に届いたら、ステージクリア
+  // （ボス戦があるステージは、クリアではなくボス戦になる。それは S7 で作る）
+  if (state.step >= CONFIG.maxSteps && !CONFIG.stages[state.stageIndex].hasBoss) {
+    clearStage();
+    renderClear();
+    showScreen('screen-clear');
+  }
+}
+
+// ステージクリアの処理をする関数（仲間を加えて、体力を回復する）
+// 受け取る値：なし　返す値：なし
+function clearStage() {
+  // 1. そのステージに仲間がいれば、仲間に加える（体力の上限も今の体力も、ボーナス分増える）
+  const ally = CONFIG.stages[state.stageIndex].ally;
+  if (ally !== null) {
+    state.allies.push(ally.name);
+    state.maxHp = state.maxHp + ally.hpBonus;
+    state.hp = state.hp + ally.hpBonus;
+  }
+
+  // 2. クリア回復：体力を増やす（上限は超えない）
+  state.hp = Math.min(state.maxHp, state.hp + CONFIG.clearHeal);
+}
+
+// 次のステージに進む関数（ステージ番号を1つ進めて、0歩目から始める）
+// 受け取る値：なし　返す値：なし
+function nextStage() {
+  state.stageIndex = state.stageIndex + 1;
+  startStage();
 }
 
 // ---------- 補助の関数 ----------
@@ -201,6 +231,20 @@ function renderAllies() {
   }
 }
 
+// クリア画面の文字を表示する関数
+// 受け取る値：なし　返す値：なし
+function renderClear() {
+  const stage = CONFIG.stages[state.stageIndex];
+  $('#clear-title').text(stage.name + ' クリア！');
+  // 仲間がいるステージなら、仲間の名前を出す。いなければ空にする
+  if (stage.ally !== null) {
+    $('#clear-ally').text(stage.ally.name + 'が仲間になった！');
+  } else {
+    $('#clear-ally').text('');
+  }
+  $('#clear-hp').text('体力：' + state.hp + ' / ' + state.maxHp);
+}
+
 // ---------- ボタンとの結びつけ ----------
 
 // ページの読み込みが終わったら実行される（jQuery の書き方）
@@ -219,6 +263,13 @@ $(function () {
   // ◀ ▲ ▶ のボタンを押したら、そのボタンの順番（0, 1, 2）をマス番号として渡す
   $('.btn-lane').on('click', function () {
     handleLaneSelect($('.btn-lane').index(this));
+  });
+
+  // [次のステージへ] を押したら、次のステージを始めてゲーム画面を表示する
+  $('#btn-next').on('click', function () {
+    nextStage();
+    render();
+    showScreen('screen-game');
   });
 
   // 3か所ある [タイトルへ]（ゲーム・ゲームオーバー・エンディング）を押したら、タイトル画面に戻る
