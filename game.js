@@ -133,6 +133,7 @@ function playBossTurn(lane) {
   } else if (state.bossHp <= 0) {
     // ボスを倒した：エンディング画面へ
     render();
+    renderEnding();
     showScreen('screen-ending');
   } else {
     render();
@@ -330,6 +331,12 @@ function renderClear() {
   $('#clear-hp').text('体力：' + state.hp + ' / ' + state.maxHp);
 }
 
+// エンディング画面の文字を表示する関数（仲間全員の名前）
+// 受け取る値：なし　返す値：なし
+function renderEnding() {
+  $('#ending-allies').text('仲間：' + state.allies.join('・'));
+}
+
 // ---------- ボタンとの結びつけ ----------
 
 // ページの読み込みが終わったら実行される（jQuery の書き方）
@@ -364,8 +371,10 @@ $(function () {
     showScreen('screen-game');
   });
 
-  // 3か所ある [タイトルへ]（ゲーム・ゲームオーバー・エンディング）を押したら、タイトル画面に戻る
+  // 3か所ある [タイトルへ]（ゲーム・ゲームオーバー・エンディング）を押したら、
+  // ゲームを全部リセットして、タイトル画面に戻る
   $('#btn-title-game, #btn-title-gameover, #btn-title-ending').on('click', function () {
+    resetGame();
     showScreen('screen-title');
   });
 });
