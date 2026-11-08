@@ -8,7 +8,84 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- 画面の中身は S1 で作る -->
+  <!-- 画面は section で分ける。表示する画面にだけ is-active クラスを付ける -->
+  <div id="app">
+
+    <!-- タイトル画面 -->
+    <section id="screen-title" class="screen is-active">
+      <h1 class="title-text">桃太郎の鬼退治</h1>
+      <p class="description">左・中央・右の3マスから1つを選んで、鬼を避けながら進もう。<br>仲間と力を合わせて、でかい鬼をやっつけよう！</p>
+      <button id="btn-start" class="btn btn-main">スタート</button>
+    </section>
+
+    <!-- ゲーム画面（通常ステージとボス戦で共通） -->
+    <section id="screen-game" class="screen">
+      <!-- ヘッダー -->
+      <header class="game-header">
+        <span id="stage-name" class="stage-name">ステージ 1</span>
+        <button id="btn-title-game" class="btn btn-small">タイトルへ</button>
+      </header>
+
+      <!-- 進捗バー（ボス戦中はボスの体力バーに切り替える） -->
+      <div class="progress-area">
+        <div id="progress-label" class="bar-label">0 / 10歩</div>
+        <div class="bar"><div id="progress-fill" class="bar-fill progress-fill"></div></div>
+      </div>
+
+      <!-- プレイエリア：3マスを横に並べる -->
+      <div id="play-area" class="play-area">
+        <div id="lane-0" class="lane"><span class="lane-name">左</span></div>
+        <div id="lane-1" class="lane"><span class="lane-name">中央</span></div>
+        <div id="lane-2" class="lane"><span class="lane-name">右</span></div>
+      </div>
+
+      <!-- 仲間表示 -->
+      <div id="allies" class="allies">仲間：なし</div>
+
+      <!-- メッセージと顔アイコン -->
+      <div class="message-area">
+        <div id="face" class="face">普通</div>
+        <p id="message" class="message">マスを選んでね</p>
+      </div>
+
+      <!-- 操作ボタン -->
+      <div class="controls">
+        <button id="btn-lane-0" class="btn btn-lane">◀</button>
+        <button id="btn-lane-1" class="btn btn-lane">▲</button>
+        <button id="btn-lane-2" class="btn btn-lane">▶</button>
+      </div>
+
+      <!-- 体力ゲージ -->
+      <div class="hp-area">
+        <div id="hp-label" class="bar-label">100 / 100</div>
+        <div class="bar"><div id="hp-fill" class="bar-fill hp-fill"></div></div>
+      </div>
+    </section>
+
+    <!-- ステージクリア画面 -->
+    <section id="screen-clear" class="screen">
+      <h2 id="clear-title" class="screen-title">ステージ1 クリア！</h2>
+      <p id="clear-ally" class="description">犬が仲間になった！</p>
+      <p id="clear-hp" class="description">体力：100 / 100</p>
+      <button id="btn-next" class="btn btn-main">次のステージへ</button>
+    </section>
+
+    <!-- ゲームオーバー画面 -->
+    <section id="screen-gameover" class="screen">
+      <h2 class="screen-title">ゲームオーバー</h2>
+      <button id="btn-retry" class="btn btn-main">リトライ</button>
+      <button id="btn-title-gameover" class="btn btn-sub">タイトルへ</button>
+    </section>
+
+    <!-- エンディング画面 -->
+    <section id="screen-ending" class="screen">
+      <h2 class="screen-title">鬼たいじ成功！</h2>
+      <p id="ending-allies" class="description">仲間：犬・猿・雉</p>
+      <p id="ending-hp" class="description">残りの体力：100</p>
+      <button id="btn-title-ending" class="btn btn-main">タイトルへ</button>
+    </section>
+
+  </div>
 
   <!-- 読み込み順：jQuery → config.js → game.js
        game.js は jQuery（$）と CONFIG を使うので、それらより後に読み込む -->
