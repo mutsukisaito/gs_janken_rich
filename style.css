@@ -193,11 +193,21 @@ body {
   font-weight: bold;
 }
 
+/* 顔アイコンの状態：普通（黄）／痛い（赤）／嬉しい（緑） */
+.face.mood-normal { background: #ffe082; }
+.face.mood-hit    { background: #ef9a9a; }
+.face.mood-happy  { background: #a5d6a7; }
+
 .message {
   margin: 0;
   font-size: 15px;
   line-height: 1.5;
+  font-weight: bold;
 }
+
+/* メッセージの状態：当たりは赤、回避は緑 */
+.message.mood-hit   { color: #c62828; }
+.message.mood-happy { color: #2e7d32; }
 
 .controls {
   display: flex;
@@ -216,4 +226,28 @@ body {
 
 .player-box {
   background: #f06595; /* 桃色 */
+}
+
+/* ぶつかったマスを赤く目立たせる */
+.lane.is-hit {
+  border-color: #e53935;
+  background: #ffebee;
+}
+
+/* 明るい色の鬼（黄鬼など）でも名前が読めるように、文字に影を付ける */
+.enemy-box {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+/* ボタンの押しやすさ：押した瞬間に少し縮んで反応が分かる。長押しで文字選択やダブルタップ拡大をさせない */
+.btn {
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.05s;
+}
+
+.btn:active {
+  transform: scale(0.96);
+  filter: brightness(0.9);
 }

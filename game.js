@@ -254,6 +254,10 @@ function renderLanes() {
     $lane.empty();
     $lane.append($('<span class="lane-name"></span>').text(CONFIG.laneNames[i]));
 
+    // ぶつかったマスには is-hit クラスを付けて、赤く目立たせる（CSS で見た目を決める）
+    const isHitLane = state.lastResult !== null && state.lastResult.isHit && state.lastResult.enemyLane === i;
+    $lane.toggleClass('is-hit', isHitLane);
+
     // 鬼がいるマスなら、色付きの箱と名前を出す（鬼の出現は S4 で作る）
     if (state.lastResult !== null && state.lastResult.enemyLane === i) {
       const enemy = state.lastResult.enemy;
@@ -304,6 +308,17 @@ function renderMessage() {
     $('#message').text('かわした！ 1歩前進');
     $('#face').text('嬉しい');
   }
+
+  // 状態に応じて、顔とメッセージのクラスを付け替える（色は CSS で決まる）
+  let mood = 'normal';
+  if (result !== null) {
+    if (result.isHit || result.isDefeated) {
+      mood = 'hit';    // 当たり・被弾・やられた
+    } else {
+      mood = 'happy';  // 回避・反撃
+    }
+  }
+  $('#face, #message').removeClass('mood-normal mood-hit mood-happy').addClass('mood-' + mood);
 }
 
 // 仲間の表示を更新する関数
