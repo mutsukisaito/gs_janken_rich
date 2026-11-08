@@ -108,6 +108,7 @@ body {
 /* ---------- ゲーム画面 ---------- */
 #screen-game.is-active {
   gap: 12px;
+  padding: 16px 8px; /* 左右の余白を狭めて、3マスを広くする */
 }
 
 .game-header {
@@ -152,7 +153,7 @@ body {
 .play-area {
   flex: 1;
   display: flex;
-  gap: 8px;
+  gap: 4px;
   min-height: 120px;
   background-size: cover;      /* 背景画像は縦横比を保って全体を覆う */
   background-position: center;
@@ -162,7 +163,7 @@ body {
 .lane {
   flex: 1 1 0;
   min-width: 0;      /* 中の画像が大きくても、3マスの幅を等しく保つ */
-  overflow: hidden;
+  overflow: visible; /* 鬼や桃太郎は、マスの幅より大きくはみ出して表示してよい */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -247,7 +248,7 @@ body {
 /* 鬼・桃太郎の画像：縦横比を崩さず、マスの幅いっぱいに表示する */
 .enemy-img,
 .player-img {
-  width: 100%;
+  width: 120%;     /* マスの幅より少し大きく表示する（鬼の大きさ） */
   min-height: 0;
   flex: 0 1 auto;
   max-height: 45%;
@@ -258,7 +259,7 @@ body {
    仲間は桃太郎の少し後ろ（下）に置く。1体＝真後ろ／2体＝犬と猿が横並び／3体＝犬と猿の後ろに雉 */
 .player-group {
   position: relative;
-  width: 100%;
+  width: 120%;     /* マスの幅より少し大きく表示する（桃太郎の大きさ） */
 }
 
 .player-group .player-img {
@@ -273,9 +274,8 @@ body {
   margin-bottom: 30%;
 }
 
-.player-group.has-allies .player-img {
-  width: 125%;
-  margin-left: -12.5%;
+.player-group.has-allies {
+  width: 135%;     /* 仲間がいるときは、桃太郎も仲間もさらに大きく */
 }
 
 .player-group .ally-img {
@@ -350,7 +350,7 @@ body {
 /* ボス戦のボス：鬼より大きく表示する */
 .enemy-img.boss-img {
   max-height: 60%;
-  width: 130%;
+  width: 140%;
 }
 
 /* エンディングの仲間：顔アイコンを大きめに、横に並べる */
