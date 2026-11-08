@@ -163,6 +163,7 @@ body {
 .lane {
   flex: 1 1 0;
   min-width: 0;      /* 中の画像が大きくても、3マスの幅を等しく保つ */
+  container-type: size; /* マスの高さ（cqh）を基準に、画面が低いときは画像を小さくする */
   overflow: visible; /* 鬼や桃太郎は、マスの幅より大きくはみ出して表示してよい */
   display: flex;
   flex-direction: column;
@@ -243,7 +244,7 @@ body {
 /* 鬼・桃太郎の画像：縦横比を崩さず、マスの幅いっぱいに表示する */
 .enemy-img,
 .player-img {
-  width: 120%;     /* マスの幅より少し大きく表示する（鬼の大きさ） */
+  width: min(120%, 40cqh); /* マスの幅より少し大きく。ただしマスが低いときは小さくする */
   min-height: 0;
   flex: 0 1 auto;
   max-height: 45%;
@@ -254,7 +255,7 @@ body {
    仲間は桃太郎の少し後ろ（下）に置く。1体＝真後ろ／2体＝犬と猿が横並び／3体＝犬と猿の後ろに雉 */
 .player-group {
   position: relative;
-  width: 120%;     /* マスの幅より少し大きく表示する（桃太郎の大きさ） */
+  width: min(120%, 40cqh);     /* マスの幅より少し大きく表示する（桃太郎の大きさ） */
 }
 
 .player-group .player-img {
@@ -270,7 +271,7 @@ body {
 }
 
 .player-group.has-allies {
-  width: 135%;     /* 仲間がいるときは、桃太郎も仲間もさらに大きく */
+  width: min(135%, 36cqh); /* 仲間がいるときは、桃太郎も仲間もさらに大きく（マスが低いときは小さく） */
 }
 
 .player-group .ally-img {
@@ -344,8 +345,8 @@ body {
 
 /* ボス戦のボス：鬼より大きく表示する */
 .enemy-img.boss-img {
-  max-height: 60%;
-  width: 140%;
+  max-height: 40%;
+  width: min(140%, 40cqh);
 }
 
 /* エンディングの仲間：顔アイコンを大きめに、横に並べる */
