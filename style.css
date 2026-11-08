@@ -360,3 +360,45 @@ body {
   width: 56px;
   height: 56px;
 }
+
+/* ---------- エンディングの紙吹雪（CSS アニメーションだけ。JavaScript・setTimeout は使わない） ---------- */
+#screen-ending {
+  position: relative;
+  overflow: hidden;
+}
+
+/* 紙吹雪を入れる枠：画面いっぱいに広げて、クリックは下のボタンに通す */
+.confetti {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* 紙吹雪1枚：色・大きさ・横位置・速さ・ずれは、HTML の style で渡す変数（--c, --s, --x, --t, --d, --sway） */
+.confetti i {
+  position: absolute;
+  top: -20px;
+  left: var(--x);
+  width: var(--s);
+  height: calc(var(--s) * 1.6);
+  background: var(--c);
+  border-radius: 2px;
+  opacity: 0;
+  animation: confetti-fall var(--t) linear var(--d) infinite;
+  will-change: transform;
+}
+
+/* 上から下へ、左右にゆれながら回転して落ちる（transform だけを動かすので軽い） */
+@keyframes confetti-fall {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg);                       opacity: 1; }
+  100% { transform: translate3d(var(--sway), 110vh, 0) rotate(720deg);      opacity: 1; }
+}
+
+/* 動きを減らす設定のときは、紙吹雪を出さない */
+@media (prefers-reduced-motion: reduce) {
+  .confetti { display: none; }
+}
