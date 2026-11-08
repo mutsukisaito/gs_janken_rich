@@ -35,11 +35,15 @@ function startStage() {
   state.lastResult = null;
 }
 
-// ボタンが押されたときの入口の関数。今は通常ステージの処理だけ呼ぶ（ボス戦への振り分けは S7 で作る）
+// ボタンが押されたときの入口の関数。ボス戦中かどうかで、処理を振り分ける
 // 受け取る値：lane … 選んだマス番号（0=左, 1=中央, 2=右）
 // 返す値：なし
 function handleLaneSelect(lane) {
-  playNormalTurn(lane);
+  if (state.isBossBattle) {
+    playBossTurn(lane);
+  } else {
+    playNormalTurn(lane);
+  }
 }
 
 // 通常ステージの1ターンの処理をする関数
@@ -69,12 +73,69 @@ function playNormalTurn(lane) {
   if (state.hp <= 0) {
     // 体力が0以下なら、ゲームオーバー画面へ
     showScreen('screen-gameover');
-  } else if (state.step >= CONFIG.maxSteps && !CONFIG.stages[state.stageIndex].hasBoss) {
-    // 歩数がクリアに必要な歩数に届いたら、ステージクリア
-    // （ボス戦があるステージは、クリアではなくボス戦になる。それは S7 で作る）
-    clearStage();
-    renderClear();
-    showScreen('screen-clear');
+  } else if (state.step >= CONFIG.maxSteps) {
+    // 歩数がクリアに必要な歩数に届いたとき
+    if (CONFIG.stages[state.stageIndex].hasBoss) {
+      // ボス戦があるステージなら、クリアではなくボス戦を始める
+      startBossBattle();
+      render();
+    } else {
+      // それ以外は、ステージクリア
+      clearStage();
+      renderClear();
+      showScreen('screen-clear');
+    }
+  }
+}
+
+// ボス戦を始める関数（ボス戦中の印を立てて、ボスの体力を満タンにする）
+// 受け取る値：なし　返す値：なし
+function startBossBattle() {
+  state.isBossBattle = true;
+  state.bossHp = CONFIG.boss.hp;
+  state.lastResult = null;
+}
+
+// ボス戦の1ターンの処理をする関数
+// 受け取る値：lane … 選んだマス番号（0, 1, 2）
+// 返す値：なし
+function playBossTurn(lane) {
+  // ボスの攻撃マスをランダムに決める
+  const attackLane = getRandomInt(CONFIG.laneNames.length);
+
+  // 選んだマスと攻撃マスが同じなら「被弾」（通常ステージの当たり判定と同じ考え方）
+  const isHit = (lane === attackLane);
+
+  if (isHit) {
+    // 被弾：プレイヤーの体力が減る
+    state.hp = Math.max(0, state.hp - CONFIG.boss.attackDamage);
+  } else {
+    // 回避＋反撃：ボスの体力が減る
+    state.bossHp = Math.max(0, state.bossHp - CONFIG.boss.counterDamage);
+  }
+
+  // 結果を保存する（鬼のかわりにボスのデータを入れる）
+  state.lastResult = {
+    lane: lane,
+    enemyLane: attackLane,
+    enemy: CONFIG.boss,
+    isHit: isHit,
+    isBoss: true,
+    isDefeated: false
+  };
+
+  if (state.hp <= 0) {
+    // プレイヤーがやられた：ボス戦を最初からやり直す（体力は両方とも満タンに戻す）
+    state.hp = state.maxHp;
+    state.bossHp = CONFIG.boss.hp;
+    state.lastResult.isDefeated = true;
+    render();
+  } else if (state.bossHp <= 0) {
+    // ボスを倒した：エンディング画面へ
+    render();
+    showScreen('screen-ending');
+  } else {
+    render();
   }
 }
 
@@ -221,6 +282,18 @@ function renderMessage() {
     // まだ1回も選んでいない（初期状態）
     $('#message').text('マスを選んでね');
     $('#face').text('普通');
+  } else if (result.isBoss && result.isDefeated) {
+    // ボス戦でやられた
+    $('#message').text('やられた…もう一度挑戦！');
+    $('#face').text('痛い');
+  } else if (result.isBoss && result.isHit) {
+    // ボス戦：被弾
+    $('#message').text(CONFIG.boss.name + 'の攻撃を受けた！ 体力-' + CONFIG.boss.attackDamage);
+    $('#face').text('痛い');
+  } else if (result.isBoss) {
+    // ボス戦：回避＋反撃
+    $('#message').text('反撃！ ボスに' + CONFIG.boss.counterDamage + 'のダメージ');
+    $('#face').text('嬉しい');
   } else if (result.isHit) {
     // 当たり
     $('#message').text(result.enemy.name + 'にぶつかった！ 体力-' + result.enemy.damage + '、1歩後退');
