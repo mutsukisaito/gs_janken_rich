@@ -35,20 +35,23 @@ function startStage() {
   state.lastResult = null;
 }
 
-// ボタンが押されたときの入口の関数。ボス戦中かどうかで、処理を振り分ける
+// ボタンが押されたときの入口の関数。ボス戦中かどうかで処理を振り分け、そのあと結果を画面に表示する
 // 受け取る値：lane … 選んだマス番号（0=左, 1=中央, 2=右）
 // 返す値：なし
 function handleLaneSelect(lane) {
+  let outcome;
   if (state.isBossBattle) {
-    playBossTurn(lane);
+    outcome = playBossTurn(lane);
   } else {
-    playNormalTurn(lane);
+    outcome = playNormalTurn(lane);
   }
+  // 状態の更新は終わったので、ここから先は表示だけ
+  showTurnResult(outcome);
 }
 
-// 通常ステージの1ターンの処理をする関数
+// 通常ステージの1ターンの処理をする関数（state を変えるだけで、画面は触らない）
 // 受け取る値：lane … 選んだマス番号（0, 1, 2）
-// 返す値：なし
+// 返す値：ターンのあとの展開（'gameover' = ゲームオーバー／'clear' = ステージクリア／'continue' = そのまま続く）
 function playNormalTurn(lane) {
   // 鬼のマスと、鬼の種類をランダムに決める
   const enemyLane = getRandomInt(CONFIG.laneNames.length);
@@ -66,26 +69,25 @@ function playNormalTurn(lane) {
     state.step = state.step + 1;
   }
 
-  // 結果を保存して、画面を更新する
+  // 結果を保存する
   state.lastResult = { lane: lane, enemyLane: enemyLane, enemy: enemy, isHit: isHit };
-  render();
 
   if (state.hp <= 0) {
-    // 体力が0以下なら、ゲームオーバー画面へ
-    showScreen('screen-gameover');
-  } else if (state.step >= CONFIG.maxSteps) {
+    // 体力が0以下なら、ゲームオーバー
+    return 'gameover';
+  }
+  if (state.step >= CONFIG.maxSteps) {
     // 歩数がクリアに必要な歩数に届いたとき
     if (CONFIG.stages[state.stageIndex].hasBoss) {
-      // ボス戦があるステージなら、クリアではなくボス戦を始める
+      // ボス戦があるステージなら、クリアではなくボス戦を始める（そのまま続く）
       startBossBattle();
-      render();
-    } else {
-      // それ以外は、ステージクリア
-      clearStage();
-      renderClear();
-      showScreen('screen-clear');
+      return 'continue';
     }
+    // それ以外は、ステージクリア
+    clearStage();
+    return 'clear';
   }
+  return 'continue';
 }
 
 // ボス戦を始める関数（ボス戦中の印を立てて、ボスの体力を満タンにする）
@@ -96,9 +98,9 @@ function startBossBattle() {
   state.lastResult = null;
 }
 
-// ボス戦の1ターンの処理をする関数
+// ボス戦の1ターンの処理をする関数（state を変えるだけで、画面は触らない）
 // 受け取る値：lane … 選んだマス番号（0, 1, 2）
-// 返す値：なし
+// 返す値：ターンのあとの展開（'ending' = ボスを倒した／'continue' = そのまま続く。やられたときも 'continue'）
 function playBossTurn(lane) {
   // ボスの攻撃マスをランダムに決める
   const attackLane = getRandomInt(CONFIG.laneNames.length);
@@ -129,15 +131,13 @@ function playBossTurn(lane) {
     state.hp = state.maxHp;
     state.bossHp = CONFIG.boss.hp;
     state.lastResult.isDefeated = true;
-    render();
-  } else if (state.bossHp <= 0) {
-    // ボスを倒した：エンディング画面へ
-    render();
-    renderEnding();
-    showScreen('screen-ending');
-  } else {
-    render();
+    return 'continue';
   }
+  if (state.bossHp <= 0) {
+    // ボスを倒した：エンディング
+    return 'ending';
+  }
+  return 'continue';
 }
 
 // ステージクリアの処理をする関数（仲間を加えて、体力を回復する）
@@ -211,6 +211,25 @@ function showScreen(screenId) {
   $('.screen').removeClass('is-active');
   // 指定された画面にだけ is-active を付けて表示する
   $('#' + screenId).addClass('is-active');
+}
+
+// 1ターンの結果を画面に出す関数（ターンのあとの展開に合わせて、表示する画面を決める）
+// 受け取る値：outcome … playNormalTurn / playBossTurn が返した展開（'gameover' / 'clear' / 'ending' / 'continue'）
+// 返す値：なし
+function showTurnResult(outcome) {
+  // ゲーム画面は、どの展開でも最新の状態に更新しておく
+  render();
+
+  if (outcome === 'gameover') {
+    showScreen('screen-gameover');
+  } else if (outcome === 'clear') {
+    renderClear();
+    showScreen('screen-clear');
+  } else if (outcome === 'ending') {
+    renderEnding();
+    showScreen('screen-ending');
+  }
+  // 'continue' のときは、ゲーム画面のまま
 }
 
 // ゲーム画面全体を更新する関数（下の render〜 をまとめて呼ぶ）
