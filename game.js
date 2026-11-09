@@ -173,6 +173,17 @@ function nextStage() {
 
 // ---------- 補助の関数 ----------
 
+// 文言の {名前} の部分を、値に置き換えて返す関数
+// 受け取る値：template … 文言（例：'{enemy}にぶつかった！'）、values … 置き換える値（例：{ enemy: '青鬼' }）
+// 返す値：置き換えたあとの文字
+function formatText(template, values) {
+  let text = template;
+  for (const key in values) {
+    text = text.split('{' + key + '}').join(values[key]);
+  }
+  return text;
+}
+
 // 0 から max-1 までのランダムな整数を返す関数
 // 受け取る値：max … 上限（この値は含まない）
 // 返す値：整数（例：max が 3 なら 0, 1, 2 のどれか）
@@ -221,13 +232,13 @@ function showTurnResult(outcome) {
   render();
 
   if (outcome === 'gameover') {
-    showScreen('screen-gameover');
+    showScreen(CONFIG.screens.gameover);
   } else if (outcome === 'clear') {
     renderClear();
-    showScreen('screen-clear');
+    showScreen(CONFIG.screens.clear);
   } else if (outcome === 'ending') {
     renderEnding();
-    showScreen('screen-ending');
+    showScreen(CONFIG.screens.ending);
   }
   // 'continue' のときは、ゲーム画面のまま
 }
@@ -248,7 +259,7 @@ function render() {
 // 受け取る値：なし　返す値：なし
 function renderHeader() {
   if (state.isBossBattle) {
-    $('#stage-name').text('ボス戦');
+    $('#stage-name').text(CONFIG.texts.bossStageName);
   } else {
     $('#stage-name').text(CONFIG.stages[state.stageIndex].name);
   }
@@ -261,11 +272,11 @@ function renderProgress() {
   let percent;
   if (state.isBossBattle) {
     // ボス戦：ボスの体力 ÷ 満タン の割合でバーの長さを決める
-    label = 'ボスの体力 ' + state.bossHp + ' / ' + CONFIG.boss.hp;
+    label = formatText(CONFIG.texts.progressBoss, { hp: state.bossHp, max: CONFIG.boss.hp });
     percent = state.bossHp / CONFIG.boss.hp * 100;
   } else {
     // 通常：歩数 ÷ クリアに必要な歩数 の割合でバーの長さを決める
-    label = state.step + ' / ' + CONFIG.maxSteps + '歩';
+    label = formatText(CONFIG.texts.progressStep, { step: state.step, max: CONFIG.maxSteps });
     percent = state.step / CONFIG.maxSteps * 100;
   }
   $('#progress-label').text(label);
@@ -300,7 +311,7 @@ function createEnemyElement(enemy, isBoss) {
 // 返す値：jQuery 要素
 function createPlayerGroup() {
   const $group = $('<div class="player-group"></div>');
-  $group.append($('<img class="player-img">').attr('src', CONFIG.images.playerBack).attr('alt', '桃太郎'));
+  $group.append($('<img class="player-img">').attr('src', CONFIG.images.playerBack).attr('alt', CONFIG.texts.altPlayer));
   if (state.allies.length > 0) {
     // 仲間がいるときは、桃太郎も仲間も大きく表示する（CSS の has-allies で決まる）
     $group.addClass('has-allies');
@@ -336,7 +347,7 @@ function renderLanes() {
     // まだ鬼が出ていないとき（ステージの最初など）は、3マスとも上側に「？」の鬼を出して、
     // 次にどのマスへ何が来るか分からないことを、プレイヤーに見せる
     if (result === null) {
-      $lane.append($('<img class="unknown-img">').attr('src', CONFIG.images.enemyUnknown).attr('alt', '？'));
+      $lane.append($('<img class="unknown-img">').attr('src', CONFIG.images.enemyUnknown).attr('alt', CONFIG.texts.altUnknown));
     }
 
     // 鬼がいるマスなら、鬼を出す
@@ -364,9 +375,9 @@ function renderBackground() {
 // タイトル・ゲームオーバー・エンディング画面の画像を設定する関数（state は使わない。起動時に1回呼ぶ）
 // 受け取る値：なし　返す値：なし
 function renderSceneImages() {
-  $('#scene-start').attr('src', CONFIG.images.sceneStart).attr('alt', '桃太郎と仲間たち');
-  $('#scene-gameover').attr('src', CONFIG.images.sceneGameover).attr('alt', 'やられた桃太郎');
-  $('#scene-ending').attr('src', CONFIG.images.sceneEnding).attr('alt', 'みんなで勝利のお祝い');
+  $('#scene-start').attr('src', CONFIG.images.sceneStart).attr('alt', CONFIG.texts.altSceneStart);
+  $('#scene-gameover').attr('src', CONFIG.images.sceneGameover).attr('alt', CONFIG.texts.altSceneGameover);
+  $('#scene-ending').attr('src', CONFIG.images.sceneEnding).attr('alt', CONFIG.texts.altSceneEnding);
 }
 
 // 体力ゲージを表示する関数
@@ -378,13 +389,14 @@ function renderHp() {
 }
 
 // メッセージ欄に、見出し（大きい文字）と詳細（ふつうの文字）を表示する関数
-// 受け取る値：見出しの文字、詳細の文字（なければ省略）　返す値：なし
-function renderMessageText(head, detail) {
+// 受け取る値：lines … CONFIG.texts の文言（[見出し] または [見出し, 詳細]）、values … {名前} に入れる値
+// 返す値：なし
+function renderMessageText(lines, values) {
   const $message = $('#message');
   $message.empty();
-  $message.append($('<span class="message-head"></span>').text(head));
-  if (detail) {
-    $message.append($('<span class="message-detail"></span>').text(detail));
+  $message.append($('<span class="message-head"></span>').text(formatText(lines[0], values)));
+  if (lines.length > 1) {
+    $message.append($('<span class="message-detail"></span>').text(formatText(lines[1], values)));
   }
 }
 
@@ -392,39 +404,40 @@ function renderMessageText(head, detail) {
 // 受け取る値：なし　返す値：なし
 function renderMessage() {
   const result = state.lastResult;
+  const texts = CONFIG.texts;
   if (result === null) {
     // まだ1回も選んでいない（初期状態）
-    renderMessageText('鬼をよけて進もう');
+    renderMessageText(texts.messageStart, {});
   } else if (result.isBoss && result.isDefeated) {
     // ボス戦でやられた
-    renderMessageText('やられた…もう一度挑戦！');
+    renderMessageText(texts.messageDefeated, {});
   } else if (result.isBoss && result.isHit) {
     // ボス戦：被弾
-    renderMessageText(CONFIG.boss.name + 'の攻撃を受けた！', '体力-' + CONFIG.boss.attackDamage);
+    renderMessageText(texts.messageBossHit, { boss: CONFIG.boss.name, damage: CONFIG.boss.attackDamage });
   } else if (result.isBoss) {
     // ボス戦：回避＋反撃
-    renderMessageText('反撃！', 'ボスに' + CONFIG.boss.counterDamage + 'のダメージ');
+    renderMessageText(texts.messageCounter, { damage: CONFIG.boss.counterDamage });
   } else if (result.isHit) {
     // 当たり
-    renderMessageText(result.enemy.name + 'にぶつかった！', '体力-' + result.enemy.damage + '、1歩後退');
+    renderMessageText(texts.messageHit, { enemy: result.enemy.name, damage: result.enemy.damage });
   } else {
     // 回避
-    renderMessageText('かわした！', '1歩前進');
+    renderMessageText(texts.messageAvoid, {});
   }
 
   // 状態に応じて、顔の種類を決める（CONFIG.images.faces のキーと、顔の説明文）
   let mood = 'normal';
   let faceKey = 'normal';
-  let faceAlt = '普通';
+  let faceAlt = texts.faceNormal;
   if (result !== null) {
     if (result.isHit || result.isDefeated) {
       mood = 'hit';    // 当たり・被弾・やられた
       faceKey = 'pain';
-      faceAlt = '痛い';
+      faceAlt = texts.facePain;
     } else {
       mood = 'happy';  // 回避・反撃
       faceKey = 'happy';
-      faceAlt = '嬉しい';
+      faceAlt = texts.faceHappy;
     }
   }
 
@@ -441,10 +454,10 @@ function renderAllies() {
   const $allies = $('#allies');
   // いったん空にして、「仲間：」の文字から作り直す
   $allies.empty();
-  $allies.append($('<span class="allies-label"></span>').text('仲間：'));
+  $allies.append($('<span class="allies-label"></span>').text(CONFIG.texts.alliesLabel));
 
   if (state.allies.length === 0) {
-    $allies.append($('<span></span>').text('なし'));
+    $allies.append($('<span></span>').text(CONFIG.texts.alliesNone));
   } else {
     // 仲間の数だけ、顔アイコンを並べる
     for (let i = 0; i < state.allies.length; i++) {
@@ -457,20 +470,20 @@ function renderAllies() {
 // 受け取る値：なし　返す値：なし
 function renderClear() {
   const stage = CONFIG.stages[state.stageIndex];
-  $('#clear-title').text(stage.name + ' クリア！');
+  $('#clear-title').text(formatText(CONFIG.texts.clearTitle, { stage: stage.name }));
   // 仲間がいるステージなら、仲間の名前を出す。いなければ空にする
   if (stage.ally !== null) {
-    $('#clear-ally').text(stage.ally.name + 'が仲間になった！');
+    $('#clear-ally').text(formatText(CONFIG.texts.clearAlly, { ally: stage.ally.name }));
   } else {
     $('#clear-ally').text('');
   }
   // 再会シーンの画像を出す（画像が設定されていないステージでは隠す）
   if (stage.clearScene) {
-    $('#clear-scene').attr('src', stage.clearScene).attr('alt', stage.ally ? stage.ally.name + 'との再会' : '').show();
+    $('#clear-scene').attr('src', stage.clearScene).attr('alt', stage.ally ? formatText(CONFIG.texts.clearScene, { ally: stage.ally.name }) : '').show();
   } else {
     $('#clear-scene').hide();
   }
-  $('#clear-hp').text('体力：' + state.hp + ' / ' + state.maxHp);
+  $('#clear-hp').text(formatText(CONFIG.texts.clearHp, { hp: state.hp, maxHp: state.maxHp }));
 }
 
 // エンディング画面の仲間を表示する関数（仲間全員の顔アイコンを並べる。「仲間」の文字は出さない）
@@ -499,7 +512,7 @@ $(function () {
     resetGame();
     startStage();
     render();
-    showScreen('screen-game');
+    showScreen(CONFIG.screens.game);
   });
 
   // ◀ ▲ ▶ のボタンを押したら、そのボタンの順番（0, 1, 2）をマス番号として渡す
@@ -511,20 +524,20 @@ $(function () {
   $('#btn-next').on('click', function () {
     nextStage();
     render();
-    showScreen('screen-game');
+    showScreen(CONFIG.screens.game);
   });
 
   // [リトライ] を押したら、同じステージをやり直してゲーム画面を表示する
   $('#btn-retry').on('click', function () {
     retryStage();
     render();
-    showScreen('screen-game');
+    showScreen(CONFIG.screens.game);
   });
 
   // 3か所ある [タイトルへ]（ゲーム・ゲームオーバー・エンディング）を押したら、
   // ゲームを全部リセットして、タイトル画面に戻る
   $('#btn-title-game, #btn-title-gameover, #btn-title-ending').on('click', function () {
     resetGame();
-    showScreen('screen-title');
+    showScreen(CONFIG.screens.title);
   });
 });
