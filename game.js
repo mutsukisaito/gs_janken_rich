@@ -337,28 +337,39 @@ function renderHp() {
   $('#hp-fill').css('width', (state.hp / state.maxHp * 100) + '%');
 }
 
+// メッセージ欄に、見出し（大きい文字）と詳細（ふつうの文字）を表示する関数
+// 受け取る値：見出しの文字、詳細の文字（なければ省略）　返す値：なし
+function renderMessageText(head, detail) {
+  const $message = $('#message');
+  $message.empty();
+  $message.append($('<span class="message-head"></span>').text(head));
+  if (detail) {
+    $message.append($('<span class="message-detail"></span>').text(detail));
+  }
+}
+
 // メッセージと顔アイコンを表示する関数
 // 受け取る値：なし　返す値：なし
 function renderMessage() {
   const result = state.lastResult;
   if (result === null) {
     // まだ1回も選んでいない（初期状態）
-    $('#message').text('マスを選んでね');
+    renderMessageText('鬼をよけて進もう');
   } else if (result.isBoss && result.isDefeated) {
     // ボス戦でやられた
-    $('#message').text('やられた…もう一度挑戦！');
+    renderMessageText('やられた…もう一度挑戦！');
   } else if (result.isBoss && result.isHit) {
     // ボス戦：被弾
-    $('#message').text(CONFIG.boss.name + 'の攻撃を受けた！ 体力-' + CONFIG.boss.attackDamage);
+    renderMessageText(CONFIG.boss.name + 'の攻撃を受けた！', '体力-' + CONFIG.boss.attackDamage);
   } else if (result.isBoss) {
     // ボス戦：回避＋反撃
-    $('#message').text('反撃！ ボスに' + CONFIG.boss.counterDamage + 'のダメージ');
+    renderMessageText('反撃！', 'ボスに' + CONFIG.boss.counterDamage + 'のダメージ');
   } else if (result.isHit) {
     // 当たり
-    $('#message').text(result.enemy.name + 'にぶつかった！ 体力-' + result.enemy.damage + '、1歩後退');
+    renderMessageText(result.enemy.name + 'にぶつかった！', '体力-' + result.enemy.damage + '、1歩後退');
   } else {
     // 回避
-    $('#message').text('かわした！ 1歩前進');
+    renderMessageText('かわした！', '1歩前進');
   }
 
   // 状態に応じて、顔の種類を決める（CONFIG.images.faces のキーと、顔の説明文）

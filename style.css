@@ -100,7 +100,9 @@ body {
 .btn-lane {
   flex: 1;
   height: 64px;
-  font-size: 28px;
+  font-size: 16px;      /* 文字のボタン（左によける／前に進む／右によける）。2行になっても収まる大きさ */
+  font-weight: bold;
+  line-height: 1.3;
   background: #F58F98; /* 桃太郎の桃色 */
   color: #fff;
 }
@@ -211,6 +213,20 @@ body {
   font-size: 15px;
   line-height: 1.5;
   font-weight: bold;
+}
+
+/* メッセージは「見出し（大きい文字・状態の色）」と「詳細（ふつうの文字・#222）」の2行 */
+.message-head {
+  display: block;
+  font-size: 20px;
+}
+
+.message-detail {
+  display: block;
+  margin-top: 2px;
+  font-size: 15px;
+  font-weight: normal;
+  color: #222;
 }
 
 /* メッセージの状態：当たりは赤、回避は緑 */
@@ -455,4 +471,16 @@ body {
   width: min(75%, 19cqh);
   height: auto;
   object-fit: contain;
+  animation: unknown-float 1.6s ease-in-out infinite; /* 上下にフワフワ動く */
+}
+
+/* 上下に6pxずつ、ゆっくり行き来する（transform だけを動かすので軽い。横の中央寄せの translateX も書いておく） */
+@keyframes unknown-float {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%      { transform: translateX(-50%) translateY(6px); }
+}
+
+/* 動きを減らす設定のときは、動かさない */
+@media (prefers-reduced-motion: reduce) {
+  .unknown-img { animation: none; }
 }
