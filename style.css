@@ -484,3 +484,15 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .unknown-img { animation: none; }
 }
+
+/* ---------- ぶつかったとき：桃太郎が鬼の下半分に重なる（桃太郎が上のレイヤー） ---------- */
+/* 鬼の画像は正方形なので、鬼の高さ＝鬼の幅。その半分（と、すき間の 8px）だけ、桃太郎を上にずらす */
+.lane.is-hit .player-group {
+  z-index: 1;                                     /* 桃太郎を鬼より前に出す */
+  margin-top: calc(min(120cqw, 40cqh) / -2 - 8px); /* 鬼（通常）の高さの半分 */
+}
+
+/* ボス戦のボスは大きいので、ボスの高さの半分 */
+.lane.is-hit:has(.boss-img) .player-group {
+  margin-top: calc(min(210cqw, 60cqh) / -2 - 8px);
+}
