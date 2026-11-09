@@ -1,6 +1,19 @@
 /* 作成日: 2026-11-08 */
 
-/* ---------- 全体 ---------- */
+/* ============================================================
+   もくじ
+   1. 全体
+   2. 画面の切り替えと、画面共通の文字
+   3. ボタン
+   4. ゲーム画面（ヘッダー・バー・プレイエリア・メッセージ・仲間）
+   5. プレイエリアの中身（鬼・桃太郎・仲間・「？」の鬼）
+   6. クリア画面
+   7. タイトル・ゲームオーバー・エンディング画面
+   8. アニメーション（CSS だけ。JavaScript・setTimeout は使わない）
+   9. 動きを減らす設定のときの対応
+   ============================================================ */
+
+/* ---------- 1. 全体 ---------- */
 * {
   box-sizing: border-box;
 }
@@ -26,7 +39,7 @@ body {
   position: relative;
 }
 
-/* ---------- 画面の切り替え ---------- */
+/* ---------- 2. 画面の切り替えと、画面共通の文字 ---------- */
 /* 通常は非表示。is-active が付いた画面だけ表示する */
 .screen {
   display: none;
@@ -66,14 +79,26 @@ body {
   margin: 0;
 }
 
-/* ---------- ボタン ---------- */
+/* ---------- 3. ボタン ---------- */
+/* 共通：押した瞬間に少し縮んで反応が分かる。長押しで文字選択やダブルタップ拡大をさせない */
 .btn {
   border: none;
   border-radius: 12px;
   font-size: 18px;
   cursor: pointer;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.05s;
 }
 
+.btn:active {
+  transform: scale(0.96);
+  filter: brightness(0.9);
+}
+
+/* 大きいボタン（スタート・リトライ・次のステージへ・タイトルへ）。
+   タップすると、押している間だけふわっと大きくなる（上の .btn:active より後ろに書いて、こちらを優先する） */
 .btn-main {
   width: 80%;
   height: 56px;
@@ -88,6 +113,17 @@ body {
   color: #222;
 }
 
+.btn-main,
+.btn-sub {
+  transition: transform 0.25s ease-out;
+}
+
+.btn-main:active,
+.btn-sub:active {
+  transform: scale(1.08);
+}
+
+/* プレイ中の小さい [タイトルへ] */
 .btn-small {
   height: 36px;
   padding: 0 12px;
@@ -96,18 +132,18 @@ body {
   color: #222;
 }
 
-/* ◀ ▲ ▶ の操作ボタン（押しやすいよう高さ60px以上） */
+/* 移動ボタン（左によける／前に進む／右によける）。押しやすいよう高さ60px以上 */
 .btn-lane {
   flex: 1;
   height: 64px;
-  font-size: 16px;      /* 文字のボタン（左によける／前に進む／右によける）。2行になっても収まる大きさ */
+  font-size: 16px;      /* 2行になっても収まる大きさ */
   font-weight: bold;
   line-height: 1.3;
   background: #F58F98; /* 桃太郎の桃色 */
   color: #fff;
 }
 
-/* ---------- ゲーム画面 ---------- */
+/* ---------- 4. ゲーム画面 ---------- */
 #screen-game.is-active {
   gap: 12px;
   padding: 16px 8px; /* 左右の余白を狭めて、3マスを広くする */
@@ -164,22 +200,24 @@ body {
 
 .lane {
   flex: 1 1 0;
-  min-width: 0;      /* 中の画像が大きくても、3マスの幅を等しく保つ */
+  min-width: 0;         /* 中の画像が大きくても、3マスの幅を等しく保つ */
   container-type: size; /* マスの高さ（cqh）を基準に、画面が低いときは画像を小さくする */
-  overflow: visible; /* 鬼や桃太郎は、マスの幅より大きくはみ出して表示してよい */
+  overflow: visible;    /* 鬼や桃太郎は、マスの幅より大きくはみ出して表示してよい */
+  position: relative;   /* 「？」の鬼を、マスの上側に置くための基準 */
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: transparent;           /* ふだんは枠も背景も透明（ぶつかったときだけ .is-hit で赤くなる） */
-  border: 2px solid transparent;     /* 枠の太さは残して、赤くなったときにマスがずれないようにする */
+  background: transparent;        /* ふだんは枠も背景も透明（ぶつかったときだけ .is-hit で赤くなる） */
+  border: 2px solid transparent;  /* 枠の太さは残して、赤くなったときにマスがずれないようにする */
   border-radius: 12px;
-  position: relative; /* 「？」の鬼を、マスの上側に置くための基準 */
 }
 
-.allies {
-  font-size: 14px;
+/* ぶつかったマスを赤く目立たせる（背景画像が見えるよう、半透明の赤） */
+.lane.is-hit {
+  border-color: #e53935;
+  background: rgba(229, 57, 53, 0.25);
 }
 
 /* メッセージと顔アイコン */
@@ -207,6 +245,13 @@ body {
 .face.mood-normal { background: #ffe082; }
 .face.mood-hit    { background: #ef9a9a; }
 .face.mood-happy  { background: #a5d6a7; }
+
+/* 顔アイコンの画像：円の中に縦横比を保って収める */
+.face-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 
 .message {
   margin: 0;
@@ -238,34 +283,46 @@ body {
   gap: 8px;
 }
 
-/* 鬼とプレイヤーの表示（マスの中） */
-.enemy-box,
-.player-box {
+/* 仲間表示：顔アイコンを横に並べる */
+.allies {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.ally-face {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: contain;
+}
+
+/* ---------- 5. プレイエリアの中身 ---------- */
+/* 鬼・桃太郎の画像：縦横比を崩さず、マスの幅より少し大きく表示する */
+.enemy-img,
+.player-img {
+  width: min(120%, 40cqh); /* マスが低いときは小さくする */
+  min-height: 0;
+  flex: 0 1 auto;
+  max-height: 45%;
+  object-fit: contain;
+}
+
+/* ボス戦のボス：鬼より大きく表示する（鬼の 1.5 倍） */
+.enemy-img.boss-img {
+  max-height: 60%;
+  width: min(210%, 60cqh);
+}
+
+/* 画像がない敵のための、色付きの箱と名前（予備） */
+.enemy-box {
   padding: 8px 6px;
   border-radius: 8px;
   font-size: 14px;
   font-weight: bold;
   color: #fff;
-}
-
-.player-box {
-  background: #f06595; /* 桃色 */
-}
-
-/* ぶつかったマスを赤く目立たせる（背景画像が見えるよう、半透明の赤） */
-.lane.is-hit {
-  border-color: #e53935;
-  background: rgba(229, 57, 53, 0.25);
-}
-
-/* 鬼・桃太郎の画像：縦横比を崩さず、マスの幅いっぱいに表示する */
-.enemy-img,
-.player-img {
-  width: min(120%, 40cqh); /* マスの幅より少し大きく。ただしマスが低いときは小さくする */
-  min-height: 0;
-  flex: 0 1 auto;
-  max-height: 45%;
-  object-fit: contain;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); /* 明るい色でも名前が読めるように */
 }
 
 /* 桃太郎と、後ろをついてくる仲間たち。
@@ -282,13 +339,10 @@ body {
   height: auto;
 }
 
-/* 仲間がいるとき：桃太郎を大きくして、仲間が並ぶ分の余白を下にあける */
+/* 仲間がいるとき：桃太郎も仲間もさらに大きくして、仲間が並ぶ分の余白を下にあける */
 .player-group.has-allies {
+  width: min(135%, 36cqh); /* マスが低いときは小さくする */
   margin-bottom: 30%;
-}
-
-.player-group.has-allies {
-  width: min(135%, 36cqh); /* 仲間がいるときは、桃太郎も仲間もさらに大きく（マスが低いときは小さく） */
 }
 
 .player-group .ally-img {
@@ -305,21 +359,34 @@ body {
 .ally-pos-3-1 { left: 53%; top: 74%; }
 .ally-pos-3-2 { left: 27%; top: 100%; width: 42%; }
 
-/* 仲間表示：顔アイコンを横に並べる */
-.allies {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* ぶつかったとき：桃太郎（と仲間）が鬼の下半分に重なり、桃太郎が上のレイヤーに来る。
+   鬼の画像は正方形なので、鬼の高さ＝鬼の幅。その半分（と、すき間の 8px）だけ、桃太郎を上にずらす。
+   震える動きは「8. アニメーション」の hit-shake */
+.lane.is-hit .player-group {
+  z-index: 1;                                      /* 桃太郎を鬼より前に出す */
+  margin-top: calc(min(120cqw, 40cqh) / -2 - 8px); /* 鬼（通常）の高さの半分 */
+  animation: hit-shake 0.4s ease-in-out;
 }
 
-.ally-face {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
+/* ボス戦のボスは大きいので、ボスの高さの半分 */
+.lane.is-hit:has(.boss-img) .player-group {
+  margin-top: calc(min(210cqw, 60cqh) / -2 - 8px);
+}
+
+/* 鬼がまだ出ていないときの「？」の鬼：各マスの上側（桃太郎から見て前方）に置く */
+.unknown-img {
+  position: absolute;
+  top: 2%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(75%, 19cqh);
+  height: auto;
   object-fit: contain;
+  animation: unknown-float 1.6s ease-in-out infinite; /* 上下にフワフワ動く */
 }
 
-/* クリア画面の再会シーン：画面幅いっぱい */
+/* ---------- 6. クリア画面 ---------- */
+/* 再会シーン：画面幅いっぱい */
 .clear-scene {
   width: 100%;
   max-height: 50%;
@@ -327,43 +394,18 @@ body {
   border-radius: 12px;
 }
 
-/* 顔アイコンの画像：円の中に縦横比を保って収める */
-.face-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+/* 「○○が仲間になった！」だけ、ふだんの 16px の約1.5倍（体力の表示は 16px のまま） */
+#clear-ally {
+  font-size: 24px;
 }
 
-/* 明るい色の鬼（黄鬼など）でも名前が読めるように、文字に影を付ける */
-.enemy-box {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-}
-
-/* ボタンの押しやすさ：押した瞬間に少し縮んで反応が分かる。長押しで文字選択やダブルタップ拡大をさせない */
-.btn {
-  touch-action: manipulation;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-  transition: transform 0.05s;
-}
-
-.btn:active {
-  transform: scale(0.96);
-  filter: brightness(0.9);
-}
-
-/* タイトル・ゲームオーバー・エンディングの画像：画面幅いっぱい、縦横比は保つ */
+/* ---------- 7. タイトル・ゲームオーバー・エンディング画面 ---------- */
+/* 画像：画面幅いっぱい、縦横比は保つ */
 .scene-img {
   width: 100%;
   max-height: 45%;
   object-fit: contain;
   border-radius: 12px;
-}
-
-/* ボス戦のボス：鬼より大きく表示する */
-.enemy-img.boss-img {
-  max-height: 60%;            /* 以前の 1.5 倍（40% → 60%） */
-  width: min(210%, 60cqh);    /* 以前の 1.5 倍（140% → 210%） */
 }
 
 /* エンディングの仲間：顔アイコンを大きめに、横に並べる */
@@ -378,13 +420,12 @@ body {
   height: 56px;
 }
 
-/* ---------- エンディングの紙吹雪（CSS アニメーションだけ。JavaScript・setTimeout は使わない） ---------- */
+/* エンディングの紙吹雪を入れる枠：画面いっぱいに広げて、クリックは下のボタンに通す */
 #screen-ending {
   position: relative;
   overflow: hidden;
 }
 
-/* 紙吹雪を入れる枠：画面いっぱいに広げて、クリックは下のボタンに通す */
 .confetti {
   position: absolute;
   top: 0;
@@ -409,24 +450,15 @@ body {
   will-change: transform;
 }
 
-/* 上から下へ、左右にゆれながら回転して落ちる（transform だけを動かすので軽い） */
+/* ---------- 8. アニメーション（transform だけを動かすので軽い） ---------- */
+/* 紙吹雪：上から下へ、左右にゆれながら回転して落ちる */
 @keyframes confetti-fall {
-  0%   { transform: translate3d(0, 0, 0) rotate(0deg);                       opacity: 1; }
-  100% { transform: translate3d(var(--sway), 110vh, 0) rotate(720deg);      opacity: 1; }
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg);                  opacity: 1; }
+  100% { transform: translate3d(var(--sway), 110vh, 0) rotate(720deg); opacity: 1; }
 }
 
-/* 動きを減らす設定のときは、紙吹雪を出さない */
-@media (prefers-reduced-motion: reduce) {
-  .confetti { display: none; }
-}
-
-/* ---------- ぶつかったときの震え（CSS アニメーションだけ。JavaScript・setTimeout は使わない） ---------- */
-/* ぶつかったマスの桃太郎（後ろの仲間も同じグループ）が、一瞬ブルっと震える。マスは描画のたびに作り直されるので、毎回動く */
-.lane.is-hit .player-group {
-  animation: hit-shake 0.4s ease-in-out;
-}
-
-/* 左右に細かく揺れて、元の位置に戻る（transform だけを動かすので軽い） */
+/* ぶつかったとき：左右に細かく揺れて、元の位置に戻る。
+   マスは描画のたびに作り直されるので、ぶつかるたびに毎回動く */
 @keyframes hit-shake {
   0%   { transform: translateX(0); }
   15%  { transform: translateX(-7px) rotate(-2deg); }
@@ -437,67 +469,19 @@ body {
   100% { transform: translateX(0); }
 }
 
-/* 動きを減らす設定のときは、震えさせない */
-@media (prefers-reduced-motion: reduce) {
-  .lane.is-hit .player-group { animation: none; }
-}
-
-/* ---------- 大きいボタン（スタート・リトライ・次のステージへ・タイトルへ）：タップすると、ふわっと大きくなる ---------- */
-/* 押している間だけ大きくなり、指を離すと、ゆっくり元の大きさに戻る（transition だけ。JavaScript・setTimeout は使わない） */
-.btn-main,
-.btn-sub {
-  transition: transform 0.25s ease-out;
-}
-
-.btn-main:active,
-.btn-sub:active {
-  transform: scale(1.08);
-}
-
-/* 動きを減らす設定のときは、大きくならず、すぐ反応する */
-@media (prefers-reduced-motion: reduce) {
-  .btn-main,
-  .btn-sub { transition: none; }
-  .btn-main:active,
-  .btn-sub:active { transform: none; }
-}
-
-/* 鬼がまだ出ていないときの「？」の鬼：各マスの上側（桃太郎から見て前方）に置く */
-.unknown-img {
-  position: absolute;
-  top: 2%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(75%, 19cqh);
-  height: auto;
-  object-fit: contain;
-  animation: unknown-float 1.6s ease-in-out infinite; /* 上下にフワフワ動く */
-}
-
-/* 上下に6pxずつ、ゆっくり行き来する（transform だけを動かすので軽い。横の中央寄せの translateX も書いておく） */
+/* 「？」の鬼：上下に6pxずつ、ゆっくり行き来する（横の中央寄せの translateX も書いておく） */
 @keyframes unknown-float {
   0%, 100% { transform: translateX(-50%) translateY(0); }
   50%      { transform: translateX(-50%) translateY(6px); }
 }
 
-/* 動きを減らす設定のときは、動かさない */
+/* ---------- 9. 動きを減らす設定のときは、動かさない ---------- */
 @media (prefers-reduced-motion: reduce) {
+  .confetti { display: none; }
+  .lane.is-hit .player-group { animation: none; }
   .unknown-img { animation: none; }
-}
-
-/* ---------- ぶつかったとき：桃太郎が鬼の下半分に重なる（桃太郎が上のレイヤー） ---------- */
-/* 鬼の画像は正方形なので、鬼の高さ＝鬼の幅。その半分（と、すき間の 8px）だけ、桃太郎を上にずらす */
-.lane.is-hit .player-group {
-  z-index: 1;                                     /* 桃太郎を鬼より前に出す */
-  margin-top: calc(min(120cqw, 40cqh) / -2 - 8px); /* 鬼（通常）の高さの半分 */
-}
-
-/* ボス戦のボスは大きいので、ボスの高さの半分 */
-.lane.is-hit:has(.boss-img) .player-group {
-  margin-top: calc(min(210cqw, 60cqh) / -2 - 8px);
-}
-
-/* クリア画面の「○○が仲間になった！」だけ、ふだんの 16px の約1.5倍（体力の表示は 16px のまま） */
-#clear-ally {
-  font-size: 24px;
+  .btn-main,
+  .btn-sub { transition: none; }
+  .btn-main:active,
+  .btn-sub:active { transform: none; }
 }

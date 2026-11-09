@@ -7,6 +7,46 @@ const CONFIG = {
   clearHeal: 20,     // ステージクリア時の回復量
   laneNames: ['左', '中央', '右'], // マスの名前（ボタンの順番と同じ）
 
+  // 画面のID（index.html の section の id と同じ）
+  screens: {
+    title:    'screen-title',
+    game:     'screen-game',
+    clear:    'screen-clear',
+    gameover: 'screen-gameover',
+    ending:   'screen-ending'
+  },
+
+  // 画面に出す文言。{名前} の部分は、実行時に数字や名前に置き換わる。文言を変えたいときは、ここだけを書き換える
+  texts: {
+    // メッセージ欄：[1行目（大きい文字）, 2行目（ふつうの文字）]
+    messageStart:   ['鬼をよけて進もう'],
+    messageHit:     ['{enemy}にぶつかった！', '体力-{damage}、1歩後退'],
+    messageAvoid:   ['かわした！', '1歩前進'],
+    messageBossHit: ['{boss}の攻撃を受けた！', '体力-{damage}'],
+    messageCounter: ['反撃！', 'ボスに{damage}のダメージ'],
+    // 顔アイコンの説明文（alt）
+    faceNormal: '普通',
+    facePain:   '痛い',
+    faceHappy:  '嬉しい',
+    // ヘッダー・バー・仲間表示
+    bossStageName: 'ボス戦',
+    progressBoss:  'ボスの体力 {hp} / {max}',
+    progressStep:  '{step} / {max}歩',
+    alliesLabel:   '仲間：',
+    alliesNone:    'なし',
+    // クリア画面
+    clearTitle: '{stage} クリア！',
+    clearAlly:  '{ally}が仲間になった！',
+    clearScene: '{ally}との再会',
+    clearHp:    '体力：{hp} / {maxHp}',
+    // 画像の説明文（alt）
+    altPlayer:        '桃太郎',
+    altUnknown:       '？',
+    altSceneStart:    '桃太郎と仲間たち',
+    altSceneGameover: 'やられた桃太郎',
+    altSceneEnding:   'みんなで勝利のお祝い'
+  },
+
   // ステージの一覧。ステージを増やすときは、ここに1行足す
   stages: [
     // ally.face … 仲間表示の顔アイコン／ally.back … 桃太郎の後ろをついてくる姿／clearScene … クリア画面の再会シーン
