@@ -271,6 +271,12 @@ function renderLanes() {
     const isHitLane = state.lastResult !== null && state.lastResult.isHit && state.lastResult.enemyLane === i;
     $lane.toggleClass('is-hit', isHitLane);
 
+    // まだ鬼が出ていないとき（ステージの最初など）は、3マスとも上側に「？」の鬼を出して、
+    // 次にどのマスへ何が来るか分からないことを、プレイヤーに見せる
+    if (state.lastResult === null) {
+      $lane.append($('<img class="unknown-img">').attr('src', CONFIG.images.enemyUnknown).attr('alt', '？'));
+    }
+
     // 鬼がいるマスなら、鬼を出す
     if (state.lastResult !== null && state.lastResult.enemyLane === i) {
       const enemy = state.lastResult.enemy;

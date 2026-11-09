@@ -173,6 +173,7 @@ body {
   background: transparent;           /* ふだんは枠も背景も透明（ぶつかったときだけ .is-hit で赤くなる） */
   border: 2px solid transparent;     /* 枠の太さは残して、赤くなったときにマスがずれないようにする */
   border-radius: 12px;
+  position: relative; /* 「？」の鬼を、マスの上側に置くための基準 */
 }
 
 .allies {
@@ -443,4 +444,15 @@ body {
   .btn-sub { transition: none; }
   .btn-main:active,
   .btn-sub:active { transform: none; }
+}
+
+/* 鬼がまだ出ていないときの「？」の鬼：各マスの上側（桃太郎から見て前方）に置く */
+.unknown-img {
+  position: absolute;
+  top: 2%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(75%, 19cqh);
+  height: auto;
+  object-fit: contain;
 }

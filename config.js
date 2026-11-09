@@ -32,6 +32,7 @@ const CONFIG = {
   // 画像のファイル名をまとめた設定。画像を差し替えるときは、ここだけを書き換える
   images: {
     playerBack: 'img/img_player_back.png',  // 選んだマスに立つ桃太郎
+    enemyUnknown: 'img/oni_unknown.png',    // 鬼がまだ出ていないとき、各マスの上側に出す「？」の鬼
     faces: {                                // 顔アイコン（初期＝normal、当たり＝pain、回避＝happy）
       normal: 'img/img_face_normal.png',
       pain:   'img/img_face_pain.png',
