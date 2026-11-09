@@ -100,7 +100,7 @@ function startBossBattle() {
 
 // ボス戦の1ターンの処理をする関数（state を変えるだけで、画面は触らない）
 // 受け取る値：lane … 選んだマス番号（0, 1, 2）
-// 返す値：ターンのあとの展開（'ending' = ボスを倒した／'continue' = そのまま続く。やられたときも 'continue'）
+// 返す値：ターンのあとの展開（'gameover' = やられた／'ending' = ボスを倒した／'continue' = そのまま続く）
 function playBossTurn(lane) {
   // ボスの攻撃マスをランダムに決める
   const attackLane = getRandomInt(CONFIG.laneNames.length);
@@ -122,16 +122,12 @@ function playBossTurn(lane) {
     enemyLane: attackLane,
     enemy: CONFIG.boss,
     isHit: isHit,
-    isBoss: true,
-    isDefeated: false
+    isBoss: true
   };
 
   if (state.hp <= 0) {
-    // プレイヤーがやられた：ボス戦を最初からやり直す（体力は両方とも満タンに戻す）
-    state.hp = state.maxHp;
-    state.bossHp = CONFIG.boss.hp;
-    state.lastResult.isDefeated = true;
-    return 'continue';
+    // プレイヤーがやられた：ゲームオーバー画面へ（やり直しは retryStage で行う）
+    return 'gameover';
   }
   if (state.bossHp <= 0) {
     // ボスを倒した：エンディング
@@ -155,13 +151,19 @@ function clearStage() {
   state.hp = Math.min(state.maxHp, state.hp + CONFIG.clearHeal);
 }
 
-// リトライの関数（体力を上限まで回復して、同じステージを0歩目から始め直す）
+// リトライの関数（体力を上限まで回復して、やられたところからやり直す）
+// 通常ステージなら、同じステージを0歩目から。ボス戦なら、ボス戦の最初から（ボスの体力も満タンに戻す）
 // 仲間とステージ番号は変えないので、仲間は減らない
 // 受け取る値：なし　返す値：なし
 function retryStage() {
   state.hp = state.maxHp;
-  // 「ステージを始める処理」を使い回す
-  startStage();
+  if (state.isBossBattle) {
+    // ボス戦：ボス戦を始める処理を使い回す
+    startBossBattle();
+  } else {
+    // 通常ステージ：「ステージを始める処理」を使い回す
+    startStage();
+  }
 }
 
 // 次のステージに進む関数（ステージ番号を1つ進めて、0歩目から始める）
@@ -408,9 +410,6 @@ function renderMessage() {
   if (result === null) {
     // まだ1回も選んでいない（初期状態）
     renderMessageText(texts.messageStart, {});
-  } else if (result.isBoss && result.isDefeated) {
-    // ボス戦でやられた
-    renderMessageText(texts.messageDefeated, {});
   } else if (result.isBoss && result.isHit) {
     // ボス戦：被弾
     renderMessageText(texts.messageBossHit, { boss: CONFIG.boss.name, damage: CONFIG.boss.attackDamage });
@@ -430,8 +429,8 @@ function renderMessage() {
   let faceKey = 'normal';
   let faceAlt = texts.faceNormal;
   if (result !== null) {
-    if (result.isHit || result.isDefeated) {
-      mood = 'hit';    // 当たり・被弾・やられた
+    if (result.isHit) {
+      mood = 'hit';    // 当たり・被弾
       faceKey = 'pain';
       faceAlt = texts.facePain;
     } else {

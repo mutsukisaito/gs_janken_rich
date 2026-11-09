@@ -20,7 +20,6 @@ const CONFIG = {
   texts: {
     // メッセージ欄：[1行目（大きい文字）, 2行目（ふつうの文字）]
     messageStart:   ['鬼をよけて進もう'],
-    messageDefeated: ['やられた…もう一度挑戦！'],
     messageHit:     ['{enemy}にぶつかった！', '体力-{damage}、1歩後退'],
     messageAvoid:   ['かわした！', '1歩前進'],
     messageBossHit: ['{boss}の攻撃を受けた！', '体力-{damage}'],
