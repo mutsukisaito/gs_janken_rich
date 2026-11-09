@@ -496,3 +496,8 @@ body {
 .lane.is-hit:has(.boss-img) .player-group {
   margin-top: calc(min(210cqw, 60cqh) / -2 - 8px);
 }
+
+/* クリア画面の「○○が仲間になった！」だけ、ふだんの 16px の約1.5倍（体力の表示は 16px のまま） */
+#clear-ally {
+  font-size: 24px;
+}
