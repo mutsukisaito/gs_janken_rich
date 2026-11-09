@@ -272,13 +272,57 @@ function renderProgress() {
   $('#progress-fill').css('width', percent + '%');
 }
 
+// 仲間の顔アイコン（<img>）を1つ作って返す関数（仲間表示とエンディングで共通）
+// 受け取る値：name … 仲間の名前（例：'犬'）
+// 返す値：顔アイコンの jQuery 要素（表示できないときは alt の名前が出る）
+function createAllyFace(name) {
+  const ally = findAllyByName(name);
+  return $('<img class="ally-face">').attr('src', ally.face).attr('alt', ally.name);
+}
+
+// 鬼（またはボス）を表示する要素を作って返す関数
+// 受け取る値：enemy … 鬼のデータ、isBoss … ボスなら true
+// 返す値：jQuery 要素
+function createEnemyElement(enemy, isBoss) {
+  if (enemy.image) {
+    // 画像がある鬼は、画像を出す（表示できないときは alt の名前が出る）
+    const $enemyImg = $('<img class="enemy-img">').attr('src', enemy.image).attr('alt', enemy.name);
+    // ボス戦のボスは、鬼より大きく表示する（CSS の boss-img）
+    $enemyImg.toggleClass('boss-img', isBoss);
+    return $enemyImg;
+  }
+  // 画像がない敵は、色付きの箱と名前を出す
+  return $('<div class="enemy-box"></div>').text(enemy.name).css('background', enemy.color);
+}
+
+// 桃太郎と、後ろをついてくる仲間たちの要素を作って返す関数
+// 受け取る値：なし（state.allies を読む）
+// 返す値：jQuery 要素
+function createPlayerGroup() {
+  const $group = $('<div class="player-group"></div>');
+  $group.append($('<img class="player-img">').attr('src', CONFIG.images.playerBack).attr('alt', '桃太郎'));
+  if (state.allies.length > 0) {
+    // 仲間がいるときは、桃太郎も仲間も大きく表示する（CSS の has-allies で決まる）
+    $group.addClass('has-allies');
+    // 仲間の数だけ後ろ姿を並べる。位置は「仲間の人数-何番目か」のクラスで決まる（CSS）
+    for (let j = 0; j < state.allies.length; j++) {
+      const ally = findAllyByName(state.allies[j]);
+      const posClass = 'ally-pos-' + state.allies.length + '-' + j;
+      $group.append($('<img class="ally-img">').addClass(posClass).attr('src', ally.back).attr('alt', ally.name));
+    }
+  }
+  return $group;
+}
+
 // 3マスに、鬼とプレイヤーを表示する関数
 // 受け取る値：なし　返す値：なし
 function renderLanes() {
+  const result = state.lastResult;
+
   // 直前の結果があれば、選んだマスにプレイヤーを出す。なければ中央に出す
   let playerLane = 1;
-  if (state.lastResult !== null) {
-    playerLane = state.lastResult.lane;
+  if (result !== null) {
+    playerLane = result.lane;
   }
 
   for (let i = 0; i < CONFIG.laneNames.length; i++) {
@@ -287,45 +331,22 @@ function renderLanes() {
     $lane.empty();
 
     // ぶつかったマスには is-hit クラスを付けて、赤く目立たせる（CSS で見た目を決める）
-    const isHitLane = state.lastResult !== null && state.lastResult.isHit && state.lastResult.enemyLane === i;
-    $lane.toggleClass('is-hit', isHitLane);
+    $lane.toggleClass('is-hit', result !== null && result.isHit && result.enemyLane === i);
 
     // まだ鬼が出ていないとき（ステージの最初など）は、3マスとも上側に「？」の鬼を出して、
     // 次にどのマスへ何が来るか分からないことを、プレイヤーに見せる
-    if (state.lastResult === null) {
+    if (result === null) {
       $lane.append($('<img class="unknown-img">').attr('src', CONFIG.images.enemyUnknown).attr('alt', '？'));
     }
 
     // 鬼がいるマスなら、鬼を出す
-    if (state.lastResult !== null && state.lastResult.enemyLane === i) {
-      const enemy = state.lastResult.enemy;
-      if (enemy.image) {
-        // 画像がある鬼は、画像を出す（表示できないときは alt の名前が出る）
-        const $enemyImg = $('<img class="enemy-img">').attr('src', enemy.image).attr('alt', enemy.name);
-        // ボス戦のボスは、鬼より大きく表示する（CSS の boss-img）
-        $enemyImg.toggleClass('boss-img', state.lastResult.isBoss === true);
-        $lane.append($enemyImg);
-      } else {
-        // 画像がない敵（ボスなど）は、今までどおり色付きの箱と名前を出す
-        $lane.append($('<div class="enemy-box"></div>').text(enemy.name).css('background', enemy.color));
-      }
+    if (result !== null && result.enemyLane === i) {
+      $lane.append(createEnemyElement(result.enemy, result.isBoss === true));
     }
 
-    // プレイヤーのいるマスなら、桃太郎の画像を出す（仲間がいれば、全員が後ろをついてくる）
+    // プレイヤーのいるマスなら、桃太郎と仲間を出す
     if (i === playerLane) {
-      const $group = $('<div class="player-group"></div>');
-      $group.append($('<img class="player-img">').attr('src', CONFIG.images.playerBack).attr('alt', '桃太郎'));
-      if (state.allies.length > 0) {
-        // 仲間がいるときは、桃太郎も仲間も大きく表示する（CSS の has-allies で決まる）
-        $group.addClass('has-allies');
-        // 仲間の数だけ後ろ姿を並べる。位置は「仲間の人数-何番目か」のクラスで決まる（CSS）
-        for (let j = 0; j < state.allies.length; j++) {
-          const ally = findAllyByName(state.allies[j]);
-          const posClass = 'ally-pos-' + state.allies.length + '-' + j;
-          $group.append($('<img class="ally-img">').addClass(posClass).attr('src', ally.back).attr('alt', ally.name));
-        }
-      }
-      $lane.append($group);
+      $lane.append(createPlayerGroup());
     }
   }
 }
@@ -425,10 +446,9 @@ function renderAllies() {
   if (state.allies.length === 0) {
     $allies.append($('<span></span>').text('なし'));
   } else {
-    // 仲間の数だけ、顔アイコンを並べる（表示できないときは alt の名前が出る）
+    // 仲間の数だけ、顔アイコンを並べる
     for (let i = 0; i < state.allies.length; i++) {
-      const ally = findAllyByName(state.allies[i]);
-      $allies.append($('<img class="ally-face">').attr('src', ally.face).attr('alt', ally.name));
+      $allies.append(createAllyFace(state.allies[i]));
     }
   }
 }
@@ -458,10 +478,9 @@ function renderClear() {
 function renderEnding() {
   const $allies = $('#ending-allies');
   $allies.empty();
-  // 仲間の数だけ、顔アイコンを並べる（表示できないときは alt の名前が出る）
+  // 仲間の数だけ、顔アイコンを並べる
   for (let i = 0; i < state.allies.length; i++) {
-    const ally = findAllyByName(state.allies[i]);
-    $allies.append($('<img class="ally-face">').attr('src', ally.face).attr('alt', ally.name));
+    $allies.append(createAllyFace(state.allies[i]));
   }
 }
 
