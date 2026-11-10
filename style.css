@@ -369,24 +369,39 @@ body {
   --wait-top:    58cqh;               /* 待ちのときの桃太郎の上端（移動ボタンの近く。雉の足元は、ボタンに少し重なってよい） */
 }
 
+/* 中央のマスから見て、そのマスが何マスぶん横にあるか（移動の動きの始まりの位置に使う）。
+   左のマスは、中央から1マスぶん右（+1）からやって来る。右のマスは -1 */
+#lane-0 { --lane-shift: 1; }
+#lane-1 { --lane-shift: 0; }
+#lane-2 { --lane-shift: -1; }
+
 /* 仲間がいるときは、桃太郎の大きさを切り替える（かわした鬼の高さ合わせにも使う） */
 .play-area.has-allies .lane {
   --player-current: var(--player-size-allies);
 }
 
-/* 鬼：判定の行に、マスの左右の真ん中で出す。マスの幅より少し大きくてよい */
+/* 鬼：判定の行に、マスの左右の真ん中で出す。マスの幅より少し大きくてよい。
+   上端は --enemy-y で決める（移動の動きでも使う）。
+   出てくるときは、上の行の「次に来る鬼」の位置から、小さい姿でサッとやって来る（8. の enemy-move-in） */
 .enemy-img {
+  --enemy-y: var(--enemy-top);
+  --from-y: var(--next-top);   /* やって来る前の上端（次に来る鬼の位置） */
+  --from-scale: 0.45;          /* やって来る前の大きさ（次に来る鬼くらいの小ささ） */
   position: absolute;
-  top: var(--enemy-top);
+  top: var(--enemy-y);
   left: calc(50cqw - var(--enemy-size) / 2);
   width: var(--enemy-size);
   height: auto;
   object-fit: contain;
+  transform-origin: top center;
+  animation: enemy-move-in 0.25s ease-out;
 }
 
-/* ボス戦のボス：鬼より大きく、上に寄せて出す */
+/* ボス戦のボス：鬼より大きく、上に寄せて出す。画面の上の中央からやって来る */
 .enemy-img.boss-img {
-  top: var(--boss-top);
+  --enemy-y: var(--boss-top);
+  --from-y: 0px;
+  --from-scale: 0.6;
   left: calc(50cqw - var(--boss-size) / 2);
   width: var(--boss-size);
 }
@@ -394,11 +409,11 @@ body {
 /* かわしたとき：鬼を下げて、桃太郎と縦の真ん中をそろえる（横に並ぶ）。
    桃太郎は「鬼の上端＋鬼の高さの半分」に出るので、鬼を「桃太郎の高さの半分」だけ下げると、真ん中がそろう */
 .enemy-img.is-avoided {
-  top: calc(var(--enemy-top) + var(--player-current) / 2);
+  --enemy-y: calc(var(--enemy-top) + var(--player-current) / 2);
 }
 
 .enemy-img.boss-img.is-avoided {
-  top: calc(var(--boss-top) + var(--player-current) / 2);
+  --enemy-y: calc(var(--boss-top) + var(--player-current) / 2);
 }
 
 /* 画像がない敵のための、色付きの箱と名前（予備） */
@@ -432,14 +447,18 @@ body {
   top: var(--wait-top);
 }
 
-/* 判定：鬼の高さの半分だけ下。同じマスに鬼がいれば、鬼の下半分に重なる */
+/* 判定：鬼の高さの半分だけ下。同じマスに鬼がいれば、鬼の下半分に重なる。
+   上端は --judge-top で決める（移動の動きでも使う）。
+   待ちの位置（中央のマスの下寄り）から、選んだマスへサッと移動する（8. の player-move-in） */
 .player-group.is-judging {
-  top: calc(var(--enemy-top) + var(--enemy-size) / 2);
+  --judge-top: calc(var(--enemy-top) + var(--enemy-size) / 2);
+  top: var(--judge-top);
+  animation: player-move-in 0.25s ease-out;
 }
 
 /* ボス戦の判定：ボスの高さの半分だけ下 */
 .play-area.is-boss .player-group.is-judging {
-  top: calc(var(--boss-top) + var(--boss-size) / 2);
+  --judge-top: calc(var(--boss-top) + var(--boss-size) / 2);
 }
 
 .player-group .player-img {
@@ -462,9 +481,9 @@ body {
 .ally-pos-3-1 { left: 53%; top: 74%; }
 .ally-pos-3-2 { left: 27%; top: 100%; width: 42%; }
 
-/* ぶつかったとき：桃太郎が震える（「8. アニメーション」の hit-shake） */
-.lane.is-hit .player-group {
-  animation: hit-shake 0.4s ease-in-out;
+/* ぶつかったとき：サッと移動したあと（0.25秒後）に、桃太郎が震える（「8. アニメーション」の hit-shake） */
+.lane.is-hit .player-group.is-judging {
+  animation: player-move-in 0.25s ease-out, hit-shake 0.4s ease-in-out 0.25s;
 }
 
 /* 次に来る鬼：中央のマスの上の行（桃太郎から見て前方）に置く */
@@ -563,6 +582,28 @@ body {
   100% { transform: translateX(0); }
 }
 
+/* 判定のときの桃太郎：中央のマスの待ちの位置から、今の位置へサッと移動する。
+   横のずれ＝何マスぶんか × マス1つの幅（中身の幅 100cqw ＋ 左右の枠 4px ＋ マスのすき間 4px）。
+   縦のずれ＝待ちの上端 − 判定の上端 */
+@keyframes player-move-in {
+  from {
+    transform: translate(calc(var(--lane-shift) * (100cqw + 8px)), calc(var(--wait-top) - var(--judge-top)));
+  }
+  to {
+    transform: none;
+  }
+}
+
+/* 鬼：上の行の「次に来る鬼」の位置から、小さい姿で今の位置へサッとやって来る */
+@keyframes enemy-move-in {
+  from {
+    transform: translate(calc(var(--lane-shift) * (100cqw + 8px)), calc(var(--from-y) - var(--enemy-y))) scale(var(--from-scale));
+  }
+  to {
+    transform: none;
+  }
+}
+
 /* 次に来る鬼：上下に6pxずつ、ゆっくり行き来する（横の中央寄せの translateX も書いておく） */
 @keyframes next-enemy-float {
   0%, 100% { transform: translateX(-50%) translateY(0); }
@@ -572,7 +613,9 @@ body {
 /* ---------- 9. 動きを減らす設定のときは、動かさない ---------- */
 @media (prefers-reduced-motion: reduce) {
   .confetti { display: none; }
-  .lane.is-hit .player-group { animation: none; }
+  .player-group.is-judging,
+  .lane.is-hit .player-group.is-judging,
+  .enemy-img { animation: none; }
   .next-enemy-img { animation: none; }
   .btn-main,
   .btn-sub { transition: none; }
