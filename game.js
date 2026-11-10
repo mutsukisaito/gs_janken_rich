@@ -9,6 +9,7 @@ let state = {
   allies: [],         // 仲間になったキャラの名前（例：['犬', '猿']）
   isBossBattle: false,// ボス戦中なら true
   bossHp: 0,          // ボスの今の体力
+  nextEnemy: null,    // 次に来る鬼のデータ（プレイエリアの上に見せる。来るマスはまだ決めない）
   lastResult: null    // 直前のターンの結果（表示用）。例：{ lane: 1, enemy: {...}, isHit: true }
 };
 
@@ -24,6 +25,7 @@ function resetGame() {
   state.allies = [];
   state.isBossBattle = false;
   state.bossHp = 0;
+  state.nextEnemy = null;
   state.lastResult = null;
 }
 
@@ -33,6 +35,8 @@ function startStage() {
   state.step = 0;
   state.isBossBattle = false;
   state.lastResult = null;
+  // 最初に来る鬼の種類を、先に決めておく（画面の上に見せるため）
+  state.nextEnemy = pickRandomEnemy();
 }
 
 // ボタンが押されたときの入口の関数。ボス戦中かどうかで処理を振り分け、そのあと結果を画面に表示する
@@ -53,9 +57,11 @@ function handleLaneSelect(lane) {
 // 受け取る値：lane … 選んだマス番号（0, 1, 2）
 // 返す値：ターンのあとの展開（'gameover' = ゲームオーバー／'clear' = ステージクリア／'continue' = そのまま続く）
 function playNormalTurn(lane) {
-  // 鬼のマスと、鬼の種類をランダムに決める
+  // 鬼の種類は、先に決めて見せていた「次の鬼」を使う。来るマスは、ここでランダムに決める
+  const enemy = state.nextEnemy;
   const enemyLane = getRandomInt(CONFIG.laneNames.length);
-  const enemy = pickRandomEnemy();
+  // その次に来る鬼の種類を、新しく決めておく
+  state.nextEnemy = pickRandomEnemy();
 
   // 選んだマスと鬼のマスが同じなら「当たり」
   const isHit = (lane === enemyLane);
@@ -292,6 +298,15 @@ function createAllyFace(name) {
   return $('<img class="ally-face">').attr('src', ally.face).attr('alt', ally.name);
 }
 
+// 「次に来る鬼」の画像を作って返す関数
+// 受け取る値：enemy … 鬼のデータ
+// 返す値：jQuery 要素
+function createNextEnemyImage(enemy) {
+  return $('<img class="next-enemy-img">')
+    .attr('src', enemy.image)
+    .attr('alt', formatText(CONFIG.texts.altNextEnemy, { enemy: enemy.name }));
+}
+
 // 鬼（またはボス）を表示する要素を作って返す関数
 // 受け取る値：enemy … 鬼のデータ、isBoss … ボスなら true
 // 返す値：jQuery 要素
@@ -345,10 +360,10 @@ function renderLanes() {
     // ぶつかったマスには is-hit クラスを付けて、赤く目立たせる（CSS で見た目を決める）
     $lane.toggleClass('is-hit', result !== null && result.isHit && result.enemyLane === i);
 
-    // まだ鬼が出ていないとき（ステージの最初など）は、3マスとも上側に「？」の鬼を出して、
-    // 次にどのマスへ何が来るか分からないことを、プレイヤーに見せる
-    if (result === null) {
-      $lane.append($('<img class="unknown-img">').attr('src', CONFIG.images.enemyUnknown).attr('alt', CONFIG.texts.altUnknown));
+    // 通常ステージでは、中央のマスの上側に「次に来る鬼」を出す（毎ターン。どのマスに来るかは見せない）
+    // ボス戦は、来るのが毎回ボスなので出さない
+    if (i === 1 && !state.isBossBattle && state.nextEnemy !== null) {
+      $lane.append(createNextEnemyImage(state.nextEnemy));
     }
 
     // 鬼がいるマスなら、鬼を出す

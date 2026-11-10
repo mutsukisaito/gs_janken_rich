@@ -424,8 +424,8 @@ body {
   margin-top: calc(min(210cqw, 60cqh) / -2 - 8px);
 }
 
-/* 鬼がまだ出ていないときの「？」の鬼：各マスの上側（桃太郎から見て前方）に置く */
-.unknown-img {
+/* 次に来る鬼：中央のマスの上側（桃太郎から見て前方）に置く */
+.next-enemy-img {
   position: absolute;
   top: 2%;
   left: 50%;
@@ -433,7 +433,7 @@ body {
   width: min(75%, 19cqh);
   height: auto;
   object-fit: contain;
-  animation: unknown-float 1.6s ease-in-out infinite; /* 上下にフワフワ動く */
+  animation: next-enemy-float 1.6s ease-in-out infinite; /* 上下にフワフワ動く */
 }
 
 /* ---------- 6. クリア画面 ---------- */
@@ -520,8 +520,8 @@ body {
   100% { transform: translateX(0); }
 }
 
-/* 「？」の鬼：上下に6pxずつ、ゆっくり行き来する（横の中央寄せの translateX も書いておく） */
-@keyframes unknown-float {
+/* 次に来る鬼：上下に6pxずつ、ゆっくり行き来する（横の中央寄せの translateX も書いておく） */
+@keyframes next-enemy-float {
   0%, 100% { transform: translateX(-50%) translateY(0); }
   50%      { transform: translateX(-50%) translateY(6px); }
 }
@@ -530,7 +530,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .confetti { display: none; }
   .lane.is-hit .player-group { animation: none; }
-  .unknown-img { animation: none; }
+  .next-enemy-img { animation: none; }
   .btn-main,
   .btn-sub { transition: none; }
   .btn-main:active,
