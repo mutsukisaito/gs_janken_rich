@@ -159,9 +159,9 @@ const CONFIG = {
   // 画像のファイル名をまとめた設定。画像を差し替えるときは、ここだけを書き換える
   images: {
     playerBack: 'img/img_player_back.png',  // 選んだマスに立つ桃太郎
-    faces: {                                // 顔アイコン（初期＝normal、当たり＝pain、回避＝happy）
+    faces: {                                // 顔アイコン（状態の名前：初期＝normal、当たり＝hit、回避＝happy）
       normal: 'img/img_face_normal.png',
-      pain:   'img/img_face_pain.png',
+      hit:    'img/img_face_pain.png',
       happy:  'img/img_face_happy.png'
     },
     bgRoad: 'img/img_bg_road.jpg',          // プレイエリアの背景（通常ステージ）
@@ -265,6 +265,7 @@ let state = {
 | 関数名 | 役割 |
 |---|---|
 | `getStageSteps()` | 今のステージをクリアするのに必要な歩数を返す（ステージの `steps`、なければ `CONFIG.maxSteps`） |
+| `getMood(result)` | 直前の結果から、桃太郎の状態の名前（`'normal'` / `'hit'` / `'happy'`）を返す。顔の画像（`CONFIG.images.faces`）・説明文（`CONFIG.texts.faceAlts`）・色（CSS の `mood-〜`）で同じ名前を使う |
 | `getRandomInt(max)` | 0 から max-1 までのランダムな整数を返す |
 | `formatText(template, values)` | 文言の `{名前}` の部分を、値に置き換えて返す（文言は `CONFIG.texts` に集めてある） |
 | `pickRandomEnemy()` | `CONFIG.enemies` から1体をランダムに返す |
@@ -282,7 +283,8 @@ let state = {
 | `renderBackground()` | 背景画像（歩数バーから移動ボタンまでのエリア。通常ステージ／ボス戦で切り替え） |
 | `renderSceneImages()` | タイトル・ゲームオーバー・エンディングの画像を設定（起動時に1回） |
 | `renderHp()` | 体力ゲージ |
-| `renderMessage()` | メッセージと顔アイコン（`renderMessageText()` で、見出しと詳細の2行に分けて出す） |
+| `renderMessage()` | メッセージ（`renderMessageText()` で、見出しと詳細の2行に分けて出す） |
+| `renderFace()` | 顔アイコンの画像・説明文と、顔とメッセージの見出しの色。状態の名前は `getMood()` で決める |
 | `renderAllies()` | 仲間の顔アイコンの表示（文字は出さない。顔アイコン1つは `createAllyFace()` で作る。エンディングと共通） |
 | `renderClear()` | クリア画面の再会シーン画像と文章 |
 | `renderEnding()` | エンディング画面の仲間の顔アイコン |

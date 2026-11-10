@@ -29,27 +29,25 @@
 
       <!-- 背景画像のエリア：歩数バーから移動ボタンまで（左右の余白なし） -->
       <div id="stage-area" class="stage-area">
+        <!-- 進捗バー（ボス戦中はボスの体力バーに切り替える） -->
+        <div class="progress-area">
+          <div id="progress-label" class="bar-label">0 / 6歩</div>
+          <div class="bar"><div id="progress-fill" class="bar-fill progress-fill"></div></div>
+        </div>
 
-      <!-- 進捗バー（ボス戦中はボスの体力バーに切り替える） -->
-      <div class="progress-area">
-        <div id="progress-label" class="bar-label">0 / 6歩</div>
-        <div class="bar"><div id="progress-fill" class="bar-fill progress-fill"></div></div>
-      </div>
+        <!-- プレイエリア：3マスを横に並べる -->
+        <div id="play-area" class="play-area">
+          <div id="lane-0" class="lane"></div>
+          <div id="lane-1" class="lane"></div>
+          <div id="lane-2" class="lane"></div>
+        </div>
 
-      <!-- プレイエリア：3マスを横に並べる -->
-      <div id="play-area" class="play-area">
-        <div id="lane-0" class="lane"></div>
-        <div id="lane-1" class="lane"></div>
-        <div id="lane-2" class="lane"></div>
-      </div>
-
-      <!-- 操作ボタン -->
-      <div class="controls">
-        <button id="btn-lane-0" class="btn btn-lane">左に<br>よける</button>
-        <button id="btn-lane-1" class="btn btn-lane">前に進む</button>
-        <button id="btn-lane-2" class="btn btn-lane">右に<br>よける</button>
-      </div>
-
+        <!-- 操作ボタン -->
+        <div class="controls">
+          <button id="btn-lane-0" class="btn btn-lane">左に<br>よける</button>
+          <button id="btn-lane-1" class="btn btn-lane">前に進む</button>
+          <button id="btn-lane-2" class="btn btn-lane">右に<br>よける</button>
+        </div>
       </div><!-- /stage-area -->
 
       <!-- 桃太郎の情報：顔アイコン＋右側の情報 -->
