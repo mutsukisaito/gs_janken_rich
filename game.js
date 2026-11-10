@@ -389,16 +389,17 @@ function renderHp() {
   $('#hp-fill').css('width', (state.hp / state.maxHp * 100) + '%');
 }
 
-// メッセージ欄に、見出し（大きい文字）と詳細（ふつうの文字）を表示する関数
+// メッセージを表示する関数。見出し（大きい文字）と詳細（ふつうの文字）を、顔アイコンの右に出す
 // 受け取る値：lines … CONFIG.texts の文言（[見出し] または [見出し, 詳細]）、values … {名前} に入れる値
 // 返す値：なし
 function renderMessageText(lines, values) {
-  const $message = $('#message');
-  $message.empty();
-  $message.append($('<span class="message-head"></span>').text(formatText(lines[0], values)));
+  $('#message-head').text(formatText(lines[0], values));
+  // 詳細がない文言のときは、詳細の欄を空にする
+  let detail = '';
   if (lines.length > 1) {
-    $message.append($('<span class="message-detail"></span>').text(formatText(lines[1], values)));
+    detail = formatText(lines[1], values);
   }
+  $('#message-detail').text(detail);
 }
 
 // メッセージと顔アイコンを表示する関数
@@ -443,24 +444,17 @@ function renderMessage() {
   $('#face-img').attr('src', CONFIG.images.faces[faceKey]).attr('alt', faceAlt);
 
   // 顔とメッセージのクラスを付け替える（色は CSS で決まる）
-  $('#face, #message').removeClass('mood-normal mood-hit mood-happy').addClass('mood-' + mood);
+  $('#face, #message-head').removeClass('mood-normal mood-hit mood-happy').addClass('mood-' + mood);
 }
 
-// 仲間の表示を更新する関数
+// 仲間の表示を更新する関数（顔アイコンだけを並べる。「仲間：」の文字は出さない）
 // 受け取る値：なし　返す値：なし
 function renderAllies() {
   const $allies = $('#allies');
-  // いったん空にして、「仲間：」の文字から作り直す
+  // いったん空にして、仲間の数だけ顔アイコンを並べる（仲間がいなければ何も出さない）
   $allies.empty();
-  $allies.append($('<span class="allies-label"></span>').text(CONFIG.texts.alliesLabel));
-
-  if (state.allies.length === 0) {
-    $allies.append($('<span></span>').text(CONFIG.texts.alliesNone));
-  } else {
-    // 仲間の数だけ、顔アイコンを並べる
-    for (let i = 0; i < state.allies.length; i++) {
-      $allies.append(createAllyFace(state.allies[i]));
-    }
+  for (let i = 0; i < state.allies.length; i++) {
+    $allies.append(createAllyFace(state.allies[i]));
   }
 }
 

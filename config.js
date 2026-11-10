@@ -32,8 +32,6 @@ const CONFIG = {
     bossStageName: 'ボス戦',
     progressBoss:  'ボスの体力 {hp} / {max}',
     progressStep:  '{step} / {max}歩',
-    alliesLabel:   '仲間：',
-    alliesNone:    'なし',
     // クリア画面
     clearTitle: '{stage} クリア！',
     clearAlly:  '{ally}が仲間になった！',

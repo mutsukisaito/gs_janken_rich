@@ -52,19 +52,21 @@
 
       </div><!-- /stage-area -->
 
-      <!-- メッセージと顔アイコン -->
-      <div class="message-area">
-        <div id="face" class="face"><img id="face-img" class="face-img" src="" alt="普通"></div>
-        <p id="message" class="message">鬼をよけて進もう</p>
-      </div>
-
-      <!-- 仲間表示 -->
-      <div id="allies" class="allies">仲間：なし</div>
-
-      <!-- 体力ゲージ -->
-      <div class="hp-area">
-        <div id="hp-label" class="bar-label">100 / 100</div>
-        <div class="bar"><div id="hp-fill" class="bar-fill hp-fill"></div></div>
+      <!-- 桃太郎の情報：顔アイコン＋右側の情報 -->
+      <div class="status-area">
+        <div class="status-row">
+          <div id="face" class="face"><img id="face-img" class="face-img" src="" alt="普通"></div>
+          <!-- 顔の右側：メッセージの見出しと詳細、仲間、体力ゲージを左揃えで縦に並べる -->
+          <div class="status-info">
+            <p id="message-head" class="message-head">鬼をよけて進もう</p>
+            <p id="message-detail" class="message-detail"></p>
+            <div id="allies" class="allies"></div>
+            <div class="hp-area">
+              <div class="bar"><div id="hp-fill" class="bar-fill hp-fill"></div></div>
+              <span id="hp-label" class="hp-label">100 / 100</span>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
