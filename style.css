@@ -226,14 +226,9 @@ body {
 .lane {
   flex: 1 1 0;
   min-width: 0;         /* 中の画像が大きくても、3マスの幅を等しく保つ */
-  container-type: size; /* マスの高さ（cqh）を基準に、画面が低いときは画像を小さくする */
+  container-type: size; /* マスの高さ（cqh）と幅（cqw）を、中の画像の位置と大きさの基準にする */
   overflow: visible;    /* 鬼や桃太郎は、マスの幅より大きくはみ出して表示してよい */
-  position: relative;   /* 「？」の鬼を、マスの上側に置くための基準 */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
+  position: relative;   /* 中の画像（鬼・桃太郎・次に来る鬼）は、マスを基準に置く（5. を参照） */
   background: transparent;        /* ふだんは枠も背景も透明（ぶつかったときだけ .is-hit で赤くなる） */
   border: 2px solid transparent;  /* 枠の太さは残して、赤くなったときにマスがずれないようにする */
   border-radius: 12px;
@@ -367,6 +362,7 @@ body {
   --player-size-allies: min(135cqw, 36cqh); /* 桃太郎の大きさ（仲間あり。仲間の分だけ縦に場所を使う） */
   --player-current: var(--player-size);     /* 今の桃太郎の大きさ（仲間がいれば、下の .has-allies で切り替わる） */
   --wait-top:    58cqh;               /* 待ちのときの桃太郎の上端（移動ボタンの近く。雉の足元は、ボタンに少し重なってよい） */
+  --lane-step:   calc(100cqw + 8px);  /* マス1つぶんの横の距離（中身の幅 100cqw ＋ 左右の枠 2px×2 ＋ マスのすき間 4px） */
 }
 
 /* 中央のマスから見て、そのマスが何マスぶん横にあるか（移動の動きの始まりの位置に使う）。
@@ -583,11 +579,11 @@ body {
 }
 
 /* 判定のときの桃太郎：中央のマスの待ちの位置から、今の位置へサッと移動する。
-   横のずれ＝何マスぶんか × マス1つの幅（中身の幅 100cqw ＋ 左右の枠 4px ＋ マスのすき間 4px）。
+   横のずれ＝何マスぶんか（--lane-shift）× マス1つぶんの距離（--lane-step）。
    縦のずれ＝待ちの上端 − 判定の上端 */
 @keyframes player-move-in {
   from {
-    transform: translate(calc(var(--lane-shift) * (100cqw + 8px)), calc(var(--wait-top) - var(--judge-top)));
+    transform: translate(calc(var(--lane-shift) * var(--lane-step)), calc(var(--wait-top) - var(--judge-top)));
   }
   to {
     transform: none;
@@ -597,7 +593,7 @@ body {
 /* 鬼：上の行の「次に来る鬼」の位置から、小さい姿で今の位置へサッとやって来る */
 @keyframes enemy-move-in {
   from {
-    transform: translate(calc(var(--lane-shift) * (100cqw + 8px)), calc(var(--from-y) - var(--enemy-y))) scale(var(--from-scale));
+    transform: translate(calc(var(--lane-shift) * var(--lane-step)), calc(var(--from-y) - var(--enemy-y))) scale(var(--from-scale));
   }
   to {
     transform: none;
