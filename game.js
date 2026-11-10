@@ -61,9 +61,8 @@ function playNormalTurn(lane) {
   const isHit = (lane === enemyLane);
 
   if (isHit) {
-    // 当たり：体力を減らして、1歩後退（0歩より小さくしない）
+    // 当たり：体力を減らす。歩数はそのまま（その場で足止め）
     state.hp = Math.max(0, state.hp - enemy.damage);
-    state.step = Math.max(0, state.step - 1);
   } else {
     // 回避：1歩前進
     state.step = state.step + 1;
