@@ -3,7 +3,7 @@
 // 今のゲームの状況。ボタンが押されるたびに、ここの値が変わる
 let state = {
   stageIndex: 0,      // 今のステージ（0から数える。0 = ステージ1）
-  step: 0,            // 今の歩数（0〜maxSteps）
+  step: 0,            // 今の歩数（0〜そのステージのクリアに必要な歩数）
   hp: CONFIG.startHp,     // 今の体力
   maxHp: CONFIG.startHp,  // 体力の上限
   allies: [],         // 仲間になったキャラの名前（例：['犬', '猿']）
@@ -81,7 +81,7 @@ function playNormalTurn(lane) {
     // 体力が0以下なら、ゲームオーバー
     return 'gameover';
   }
-  if (state.step >= CONFIG.maxSteps) {
+  if (state.step >= getStageSteps()) {
     // 歩数がクリアに必要な歩数に届いたとき
     if (CONFIG.stages[state.stageIndex].hasBoss) {
       // ボス戦があるステージなら、クリアではなくボス戦を始める（そのまま続く）
@@ -191,6 +191,17 @@ function formatText(template, values) {
   return text;
 }
 
+// 今のステージをクリアするのに必要な歩数を返す関数
+// 受け取る値：なし
+// 返す値：歩数（ステージに steps があればその値、なければ CONFIG.maxSteps）
+function getStageSteps() {
+  const stage = CONFIG.stages[state.stageIndex];
+  if (stage.steps) {
+    return stage.steps;
+  }
+  return CONFIG.maxSteps;
+}
+
 // 0 から max-1 までのランダムな整数を返す関数
 // 受け取る値：max … 上限（この値は含まない）
 // 返す値：整数（例：max が 3 なら 0, 1, 2 のどれか）
@@ -283,8 +294,8 @@ function renderProgress() {
     percent = state.bossHp / CONFIG.boss.hp * 100;
   } else {
     // 通常：歩数 ÷ クリアに必要な歩数 の割合でバーの長さを決める
-    label = formatText(CONFIG.texts.progressStep, { step: state.step, max: CONFIG.maxSteps });
-    percent = state.step / CONFIG.maxSteps * 100;
+    label = formatText(CONFIG.texts.progressStep, { step: state.step, max: getStageSteps() });
+    percent = state.step / getStageSteps() * 100;
   }
   $('#progress-label').text(label);
   $('#progress-fill').css('width', percent + '%');

@@ -2,7 +2,7 @@
 
 // ゲーム全体の設定。数値を変えたいときは、このファイルだけを書き換える
 const CONFIG = {
-  maxSteps: 10,      // 1ステージをクリアするのに必要な歩数
+  maxSteps: 10,      // 1ステージをクリアするのに必要な歩数（ステージに steps があれば、そちらを使う）
   startHp: 100,      // ゲーム開始時の体力
   clearHeal: 20,     // ステージクリア時の回復量
   laneNames: ['左', '中央', '右'], // マスの名前（ボタンの順番と同じ）
@@ -48,7 +48,8 @@ const CONFIG = {
   // ステージの一覧。ステージを増やすときは、ここに1行足す
   stages: [
     // ally.face … 仲間表示の顔アイコン／ally.back … 桃太郎の後ろをついてくる姿／clearScene … クリア画面の再会シーン
-    { name: 'ステージ1',
+    // steps … そのステージだけクリアに必要な歩数を変えたいときに書く（書かなければ maxSteps）
+    { name: 'ステージ1', steps: 6,   // 最初のステージは易しくするため、6歩でクリア
       ally: { name: '犬', hpBonus: 50,  face: 'img/face_dog.png',      back: 'img/img_ally_dog_back.png' },
       clearScene: 'img/img_scene_clear1.jpg', hasBoss: false },
     { name: 'ステージ2',
