@@ -2,7 +2,7 @@
 
 // ゲーム全体の設定。数値を変えたいときは、このファイルだけを書き換える
 const CONFIG = {
-  maxSteps: 10,      // 1ステージをクリアするのに必要な歩数
+  maxSteps: 10,      // 1ステージをクリアするのに必要な歩数（ステージに steps があれば、そちらを使う）
   startHp: 100,      // ゲーム開始時の体力
   clearHeal: 20,     // ステージクリア時の回復量
   laneNames: ['左', '中央', '右'], // マスの名前（ボタンの順番と同じ）
@@ -20,20 +20,16 @@ const CONFIG = {
   texts: {
     // メッセージ欄：[1行目（大きい文字）, 2行目（ふつうの文字）]
     messageStart:   ['鬼をよけて進もう'],
-    messageHit:     ['{enemy}にぶつかった！', '体力-{damage}、1歩後退'],
+    messageHit:     ['{enemy}にぶつかった！', '体力-{damage}、その場で足止め'],
     messageAvoid:   ['かわした！', '1歩前進'],
     messageBossHit: ['{boss}の攻撃を受けた！', '体力-{damage}'],
     messageCounter: ['反撃！', 'ボスに{damage}のダメージ'],
     // 顔アイコンの説明文（alt）
-    faceNormal: '普通',
-    facePain:   '痛い',
-    faceHappy:  '嬉しい',
+    faceAlts: { normal: '普通', hit: '痛い', happy: '嬉しい' }, // 状態の名前は images.faces と同じ
     // ヘッダー・バー・仲間表示
     bossStageName: 'ボス戦',
     progressBoss:  'ボスの体力 {hp} / {max}',
     progressStep:  '{step} / {max}歩',
-    alliesLabel:   '仲間：',
-    alliesNone:    'なし',
     // クリア画面
     clearTitle: '{stage} クリア！',
     clearAlly:  '{ally}が仲間になった！',
@@ -41,7 +37,7 @@ const CONFIG = {
     clearHp:    '体力：{hp} / {maxHp}',
     // 画像の説明文（alt）
     altPlayer:        '桃太郎',
-    altUnknown:       '？',
+    altNextEnemy:     '次の鬼：{enemy}',
     altSceneStart:    '桃太郎と仲間たち',
     altSceneGameover: 'やられた桃太郎',
     altSceneEnding:   'みんなで勝利のお祝い'
@@ -50,7 +46,8 @@ const CONFIG = {
   // ステージの一覧。ステージを増やすときは、ここに1行足す
   stages: [
     // ally.face … 仲間表示の顔アイコン／ally.back … 桃太郎の後ろをついてくる姿／clearScene … クリア画面の再会シーン
-    { name: 'ステージ1',
+    // steps … そのステージだけクリアに必要な歩数を変えたいときに書く（書かなければ maxSteps）
+    { name: 'ステージ1', steps: 6,   // 最初のステージは易しくするため、6歩でクリア
       ally: { name: '犬', hpBonus: 50,  face: 'img/face_dog.png',      back: 'img/img_ally_dog_back.png' },
       clearScene: 'img/img_scene_clear1.jpg', hasBoss: false },
     { name: 'ステージ2',
@@ -72,10 +69,9 @@ const CONFIG = {
   // 画像のファイル名をまとめた設定。画像を差し替えるときは、ここだけを書き換える
   images: {
     playerBack: 'img/img_player_back.png',  // 選んだマスに立つ桃太郎
-    enemyUnknown: 'img/oni_unknown.png',    // 鬼がまだ出ていないとき、各マスの上側に出す「？」の鬼
-    faces: {                                // 顔アイコン（初期＝normal、当たり＝pain、回避＝happy）
+    faces: {                                // 顔アイコン（状態の名前：初期＝normal、当たり＝hit、回避＝happy）
       normal: 'img/img_face_normal.png',
-      pain:   'img/img_face_pain.png',
+      hit:    'img/img_face_pain.png',
       happy:  'img/img_face_happy.png'
     },
     bgRoad: 'img/img_bg_road.jpg',          // プレイエリアの背景（通常ステージ）

@@ -3,12 +3,13 @@
 // 今のゲームの状況。ボタンが押されるたびに、ここの値が変わる
 let state = {
   stageIndex: 0,      // 今のステージ（0から数える。0 = ステージ1）
-  step: 0,            // 今の歩数（0〜maxSteps）
+  step: 0,            // 今の歩数（0〜そのステージのクリアに必要な歩数）
   hp: CONFIG.startHp,     // 今の体力
   maxHp: CONFIG.startHp,  // 体力の上限
   allies: [],         // 仲間になったキャラの名前（例：['犬', '猿']）
   isBossBattle: false,// ボス戦中なら true
   bossHp: 0,          // ボスの今の体力
+  nextEnemy: null,    // 次に来る鬼のデータ（プレイエリアの上に見せる。来るマスはまだ決めない）
   lastResult: null    // 直前のターンの結果（表示用）。例：{ lane: 1, enemy: {...}, isHit: true }
 };
 
@@ -24,6 +25,7 @@ function resetGame() {
   state.allies = [];
   state.isBossBattle = false;
   state.bossHp = 0;
+  state.nextEnemy = null;
   state.lastResult = null;
 }
 
@@ -33,6 +35,8 @@ function startStage() {
   state.step = 0;
   state.isBossBattle = false;
   state.lastResult = null;
+  // 最初に来る鬼の種類を、先に決めておく（画面の上に見せるため）
+  state.nextEnemy = pickRandomEnemy();
 }
 
 // ボタンが押されたときの入口の関数。ボス戦中かどうかで処理を振り分け、そのあと結果を画面に表示する
@@ -53,17 +57,18 @@ function handleLaneSelect(lane) {
 // 受け取る値：lane … 選んだマス番号（0, 1, 2）
 // 返す値：ターンのあとの展開（'gameover' = ゲームオーバー／'clear' = ステージクリア／'continue' = そのまま続く）
 function playNormalTurn(lane) {
-  // 鬼のマスと、鬼の種類をランダムに決める
+  // 鬼の種類は、先に決めて見せていた「次の鬼」を使う。来るマスは、ここでランダムに決める
+  const enemy = state.nextEnemy;
   const enemyLane = getRandomInt(CONFIG.laneNames.length);
-  const enemy = pickRandomEnemy();
+  // その次に来る鬼の種類を、新しく決めておく
+  state.nextEnemy = pickRandomEnemy();
 
   // 選んだマスと鬼のマスが同じなら「当たり」
   const isHit = (lane === enemyLane);
 
   if (isHit) {
-    // 当たり：体力を減らして、1歩後退（0歩より小さくしない）
+    // 当たり：体力を減らす。歩数はそのまま（その場で足止め）
     state.hp = Math.max(0, state.hp - enemy.damage);
-    state.step = Math.max(0, state.step - 1);
   } else {
     // 回避：1歩前進
     state.step = state.step + 1;
@@ -76,7 +81,7 @@ function playNormalTurn(lane) {
     // 体力が0以下なら、ゲームオーバー
     return 'gameover';
   }
-  if (state.step >= CONFIG.maxSteps) {
+  if (state.step >= getStageSteps()) {
     // 歩数がクリアに必要な歩数に届いたとき
     if (CONFIG.stages[state.stageIndex].hasBoss) {
       // ボス戦があるステージなら、クリアではなくボス戦を始める（そのまま続く）
@@ -186,6 +191,17 @@ function formatText(template, values) {
   return text;
 }
 
+// 今のステージをクリアするのに必要な歩数を返す関数
+// 受け取る値：なし
+// 返す値：歩数（ステージに steps があればその値、なければ CONFIG.maxSteps）
+function getStageSteps() {
+  const stage = CONFIG.stages[state.stageIndex];
+  if (stage.steps) {
+    return stage.steps;
+  }
+  return CONFIG.maxSteps;
+}
+
 // 0 から max-1 までのランダムな整数を返す関数
 // 受け取る値：max … 上限（この値は含まない）
 // 返す値：整数（例：max が 3 なら 0, 1, 2 のどれか）
@@ -254,6 +270,7 @@ function render() {
   renderLanes();
   renderHp();
   renderMessage();
+  renderFace();
   renderAllies();
 }
 
@@ -278,8 +295,8 @@ function renderProgress() {
     percent = state.bossHp / CONFIG.boss.hp * 100;
   } else {
     // 通常：歩数 ÷ クリアに必要な歩数 の割合でバーの長さを決める
-    label = formatText(CONFIG.texts.progressStep, { step: state.step, max: CONFIG.maxSteps });
-    percent = state.step / CONFIG.maxSteps * 100;
+    label = formatText(CONFIG.texts.progressStep, { step: state.step, max: getStageSteps() });
+    percent = state.step / getStageSteps() * 100;
   }
   $('#progress-label').text(label);
   $('#progress-fill').css('width', percent + '%');
@@ -291,6 +308,15 @@ function renderProgress() {
 function createAllyFace(name) {
   const ally = findAllyByName(name);
   return $('<img class="ally-face">').attr('src', ally.face).attr('alt', ally.name);
+}
+
+// 「次に来る鬼」の画像を作って返す関数
+// 受け取る値：enemy … 鬼のデータ
+// 返す値：jQuery 要素
+function createNextEnemyImage(enemy) {
+  return $('<img class="next-enemy-img">')
+    .attr('src', enemy.image)
+    .attr('alt', formatText(CONFIG.texts.altNextEnemy, { enemy: enemy.name }));
 }
 
 // 鬼（またはボス）を表示する要素を作って返す関数
@@ -314,15 +340,12 @@ function createEnemyElement(enemy, isBoss) {
 function createPlayerGroup() {
   const $group = $('<div class="player-group"></div>');
   $group.append($('<img class="player-img">').attr('src', CONFIG.images.playerBack).attr('alt', CONFIG.texts.altPlayer));
-  if (state.allies.length > 0) {
-    // 仲間がいるときは、桃太郎も仲間も大きく表示する（CSS の has-allies で決まる）
-    $group.addClass('has-allies');
-    // 仲間の数だけ後ろ姿を並べる。位置は「仲間の人数-何番目か」のクラスで決まる（CSS）
-    for (let j = 0; j < state.allies.length; j++) {
-      const ally = findAllyByName(state.allies[j]);
-      const posClass = 'ally-pos-' + state.allies.length + '-' + j;
-      $group.append($('<img class="ally-img">').addClass(posClass).attr('src', ally.back).attr('alt', ally.name));
-    }
+  // 仲間の数だけ後ろ姿を並べる。位置は「仲間の人数-何番目か」のクラスで決まる（CSS）。
+  // 仲間がいるときの桃太郎の大きさは、プレイエリアの has-allies で決まる（renderLanes）
+  for (let j = 0; j < state.allies.length; j++) {
+    const ally = findAllyByName(state.allies[j]);
+    const posClass = 'ally-pos-' + state.allies.length + '-' + j;
+    $group.append($('<img class="ally-img">').addClass(posClass).attr('src', ally.back).attr('alt', ally.name));
   }
   return $group;
 }
@@ -332,11 +355,18 @@ function createPlayerGroup() {
 function renderLanes() {
   const result = state.lastResult;
 
-  // 直前の結果があれば、選んだマスにプレイヤーを出す。なければ中央に出す
+  // 直前の結果があれば、選んだマスの「判定の行」にプレイヤーを出す。
+  // なければ（ボタンを押す前）、中央のマスの下寄りで「待ち」
   let playerLane = 1;
+  let playerPosClass = 'is-waiting';
   if (result !== null) {
     playerLane = result.lane;
+    playerPosClass = 'is-judging';
   }
+
+  // ボス戦かどうかで、判定のときの桃太郎の高さが変わる（CSS の .play-area.is-boss）
+  // 仲間がいるかどうかで、桃太郎の大きさが変わる（CSS の .play-area.has-allies）
+  $('#play-area').toggleClass('is-boss', state.isBossBattle).toggleClass('has-allies', state.allies.length > 0);
 
   for (let i = 0; i < CONFIG.laneNames.length; i++) {
     const $lane = $('#lane-' + i);
@@ -346,32 +376,33 @@ function renderLanes() {
     // ぶつかったマスには is-hit クラスを付けて、赤く目立たせる（CSS で見た目を決める）
     $lane.toggleClass('is-hit', result !== null && result.isHit && result.enemyLane === i);
 
-    // まだ鬼が出ていないとき（ステージの最初など）は、3マスとも上側に「？」の鬼を出して、
-    // 次にどのマスへ何が来るか分からないことを、プレイヤーに見せる
-    if (result === null) {
-      $lane.append($('<img class="unknown-img">').attr('src', CONFIG.images.enemyUnknown).attr('alt', CONFIG.texts.altUnknown));
+    // 通常ステージでは、中央のマスの上側に「次に来る鬼」を出す（毎ターン。どのマスに来るかは見せない）
+    // ボス戦は、来るのが毎回ボスなので出さない
+    if (i === 1 && !state.isBossBattle && state.nextEnemy !== null) {
+      $lane.append(createNextEnemyImage(state.nextEnemy));
     }
 
     // 鬼がいるマスなら、鬼を出す
     if (result !== null && result.enemyLane === i) {
-      $lane.append(createEnemyElement(result.enemy, result.isBoss === true));
+      // かわしたときは、鬼を桃太郎と同じ高さまで下げる（CSS の is-avoided）
+      $lane.append(createEnemyElement(result.enemy, result.isBoss === true).toggleClass('is-avoided', !result.isHit));
     }
 
     // プレイヤーのいるマスなら、桃太郎と仲間を出す
     if (i === playerLane) {
-      $lane.append(createPlayerGroup());
+      $lane.append(createPlayerGroup().addClass(playerPosClass));
     }
   }
 }
 
-// プレイエリアの背景画像を表示する関数（ボス戦かどうかで、道とボス戦の背景を切り替える）
+// 背景画像を表示する関数（歩数バーから移動ボタンまでのエリア。ボス戦かどうかで、道とボス戦の背景を切り替える）
 // 受け取る値：なし　返す値：なし
 function renderBackground() {
   let bg = CONFIG.images.bgRoad;
   if (state.isBossBattle) {
     bg = CONFIG.images.bgBoss;
   }
-  $('#play-area').css('background-image', 'url("' + bg + '")');
+  $('#stage-area').css('background-image', 'url("' + bg + '")');
 }
 
 // タイトル・ゲームオーバー・エンディング画面の画像を設定する関数（state は使わない。起動時に1回呼ぶ）
@@ -390,19 +421,20 @@ function renderHp() {
   $('#hp-fill').css('width', (state.hp / state.maxHp * 100) + '%');
 }
 
-// メッセージ欄に、見出し（大きい文字）と詳細（ふつうの文字）を表示する関数
+// メッセージを表示する関数。見出し（大きい文字）と詳細（ふつうの文字）を、顔アイコンの右に出す
 // 受け取る値：lines … CONFIG.texts の文言（[見出し] または [見出し, 詳細]）、values … {名前} に入れる値
 // 返す値：なし
 function renderMessageText(lines, values) {
-  const $message = $('#message');
-  $message.empty();
-  $message.append($('<span class="message-head"></span>').text(formatText(lines[0], values)));
+  $('#message-head').text(formatText(lines[0], values));
+  // 詳細がない文言のときは、詳細の欄を空にする
+  let detail = '';
   if (lines.length > 1) {
-    $message.append($('<span class="message-detail"></span>').text(formatText(lines[1], values)));
+    detail = formatText(lines[1], values);
   }
+  $('#message-detail').text(detail);
 }
 
-// メッセージと顔アイコンを表示する関数
+// メッセージを表示する関数（直前の結果に合わせて、見出しと詳細を決める）
 // 受け取る値：なし　返す値：なし
 function renderMessage() {
   const result = state.lastResult;
@@ -423,45 +455,41 @@ function renderMessage() {
     // 回避
     renderMessageText(texts.messageAvoid, {});
   }
-
-  // 状態に応じて、顔の種類を決める（CONFIG.images.faces のキーと、顔の説明文）
-  let mood = 'normal';
-  let faceKey = 'normal';
-  let faceAlt = texts.faceNormal;
-  if (result !== null) {
-    if (result.isHit) {
-      mood = 'hit';    // 当たり・被弾
-      faceKey = 'pain';
-      faceAlt = texts.facePain;
-    } else {
-      mood = 'happy';  // 回避・反撃
-      faceKey = 'happy';
-      faceAlt = texts.faceHappy;
-    }
-  }
-
-  // 顔アイコンの画像を差し替える（表示できないときは alt の文字が出る）
-  $('#face-img').attr('src', CONFIG.images.faces[faceKey]).attr('alt', faceAlt);
-
-  // 顔とメッセージのクラスを付け替える（色は CSS で決まる）
-  $('#face, #message').removeClass('mood-normal mood-hit mood-happy').addClass('mood-' + mood);
 }
 
-// 仲間の表示を更新する関数
+// 直前の結果から、桃太郎の状態の名前を返す関数（顔アイコンの画像・説明文・色で共通に使う）
+// 受け取る値：result … state.lastResult
+// 返す値：'normal'（まだ選んでいない）／'hit'（当たり・被弾）／'happy'（回避・反撃）
+function getMood(result) {
+  if (result === null) {
+    return 'normal';
+  }
+  if (result.isHit) {
+    return 'hit';
+  }
+  return 'happy';
+}
+
+// 顔アイコンを表示する関数（状態に合わせて、画像・説明文・色を変える）
+// 受け取る値：なし　返す値：なし
+function renderFace() {
+  const mood = getMood(state.lastResult);
+
+  // 顔アイコンの画像を差し替える（表示できないときは alt の文字が出る）
+  $('#face-img').attr('src', CONFIG.images.faces[mood]).attr('alt', CONFIG.texts.faceAlts[mood]);
+
+  // 顔とメッセージの見出しのクラスを付け替える（色は CSS の mood-〜 で決まる）
+  $('#face, #message-head').removeClass('mood-normal mood-hit mood-happy').addClass('mood-' + mood);
+}
+
+// 仲間の表示を更新する関数（顔アイコンだけを並べる。「仲間：」の文字は出さない）
 // 受け取る値：なし　返す値：なし
 function renderAllies() {
   const $allies = $('#allies');
-  // いったん空にして、「仲間：」の文字から作り直す
+  // いったん空にして、仲間の数だけ顔アイコンを並べる（仲間がいなければ何も出さない）
   $allies.empty();
-  $allies.append($('<span class="allies-label"></span>').text(CONFIG.texts.alliesLabel));
-
-  if (state.allies.length === 0) {
-    $allies.append($('<span></span>').text(CONFIG.texts.alliesNone));
-  } else {
-    // 仲間の数だけ、顔アイコンを並べる
-    for (let i = 0; i < state.allies.length; i++) {
-      $allies.append(createAllyFace(state.allies[i]));
-    }
+  for (let i = 0; i < state.allies.length; i++) {
+    $allies.append(createAllyFace(state.allies[i]));
   }
 }
 
