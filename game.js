@@ -363,14 +363,14 @@ function renderLanes() {
   }
 }
 
-// プレイエリアの背景画像を表示する関数（ボス戦かどうかで、道とボス戦の背景を切り替える）
+// 背景画像を表示する関数（歩数バーから移動ボタンまでのエリア。ボス戦かどうかで、道とボス戦の背景を切り替える）
 // 受け取る値：なし　返す値：なし
 function renderBackground() {
   let bg = CONFIG.images.bgRoad;
   if (state.isBossBattle) {
     bg = CONFIG.images.bgBoss;
   }
-  $('#play-area').css('background-image', 'url("' + bg + '")');
+  $('#stage-area').css('background-image', 'url("' + bg + '")');
 }
 
 // タイトル・ゲームオーバー・エンディング画面の画像を設定する関数（state は使わない。起動時に1回呼ぶ）
