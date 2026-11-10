@@ -346,11 +346,18 @@ function createPlayerGroup() {
 function renderLanes() {
   const result = state.lastResult;
 
-  // 直前の結果があれば、選んだマスにプレイヤーを出す。なければ中央に出す
+  // 直前の結果があれば、選んだマスの「判定の行」にプレイヤーを出す。
+  // なければ（ボタンを押す前）、中央のマスの下寄りで「待ち」
   let playerLane = 1;
+  let playerPosClass = 'is-waiting';
   if (result !== null) {
     playerLane = result.lane;
+    playerPosClass = 'is-judging';
   }
+
+  // ボス戦かどうかで、判定のときの桃太郎の高さが変わる（CSS の .play-area.is-boss）
+  // 仲間がいるかどうかで、桃太郎の大きさが変わる（CSS の .play-area.has-allies）
+  $('#play-area').toggleClass('is-boss', state.isBossBattle).toggleClass('has-allies', state.allies.length > 0);
 
   for (let i = 0; i < CONFIG.laneNames.length; i++) {
     const $lane = $('#lane-' + i);
@@ -368,12 +375,13 @@ function renderLanes() {
 
     // 鬼がいるマスなら、鬼を出す
     if (result !== null && result.enemyLane === i) {
-      $lane.append(createEnemyElement(result.enemy, result.isBoss === true));
+      // かわしたときは、鬼を桃太郎と同じ高さまで下げる（CSS の is-avoided）
+      $lane.append(createEnemyElement(result.enemy, result.isBoss === true).toggleClass('is-avoided', !result.isHit));
     }
 
     // プレイヤーのいるマスなら、桃太郎と仲間を出す
     if (i === playerLane) {
-      $lane.append(createPlayerGroup());
+      $lane.append(createPlayerGroup().addClass(playerPosClass));
     }
   }
 }

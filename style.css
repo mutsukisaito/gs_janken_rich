@@ -6,7 +6,7 @@
    2. 画面の切り替えと、画面共通の文字
    3. ボタン
    4. ゲーム画面（ヘッダー・バー・プレイエリア・メッセージ・仲間）
-   5. プレイエリアの中身（鬼・桃太郎・仲間・「？」の鬼）
+   5. プレイエリアの中身（鬼・桃太郎・仲間・次に来る鬼）
    6. クリア画面
    7. タイトル・ゲームオーバー・エンディング画面
    8. アニメーション（CSS だけ。JavaScript・setTimeout は使わない）
@@ -220,6 +220,7 @@ body {
   gap: 4px;
   min-height: 120px;
   margin: 0 -8px;
+  pointer-events: none;  /* 中の画像（ボタンに重なった雉など）がタップをじゃましないよう、タップは下のボタンに通す */
 }
 
 .lane {
@@ -350,24 +351,64 @@ body {
 }
 
 /* ---------- 5. プレイエリアの中身 ---------- */
-/* 鬼・桃太郎の画像：縦横比を崩さず、マスの幅より少し大きく表示する */
-.enemy-img,
-.player-img {
-  width: min(120%, 40cqh); /* マスが低いときは小さくする */
-  min-height: 0;
-  flex: 0 1 auto;
-  max-height: 45%;
+/* マスの中は「3つの行」で考える。位置と大きさは、マスの高さ（cqh）と幅（cqw）を基準にした変数で決める。
+   ・上の行　：次に来る鬼（中央のマスだけ）
+   ・真ん中の行：判定（ぶつかる・よける）。鬼と桃太郎が、選ばれたマスに出る。同じマスなら重なる
+   ・下　　　：待ち（ボタンを押す前）の桃太郎。移動ボタンの近く（雉の足元は、ボタンに少し重なってよい）
+   位置を調整したいときは、ここの変数だけを書き換える */
+.lane {
+  --next-size:   min(70cqw, 16cqh);   /* 次に来る鬼の大きさ */
+  --next-top:    1cqh;                /* 次に来る鬼の上端 */
+  --enemy-size:  min(120cqw, 40cqh);  /* 鬼の大きさ（画像は正方形なので、幅＝高さ） */
+  --enemy-top:   18cqh;               /* 判定のときの鬼の上端（次に来る鬼の下） */
+  --boss-size:   min(210cqw, 60cqh);  /* ボスの大きさ（鬼の 1.5 倍） */
+  --boss-top:    4cqh;                /* 判定のときのボスの上端（ボス戦は次の鬼を出さないので、上に寄せる） */
+  --player-size: min(120cqw, 40cqh);  /* 桃太郎の大きさ（仲間なし） */
+  --player-size-allies: min(135cqw, 36cqh); /* 桃太郎の大きさ（仲間あり。仲間の分だけ縦に場所を使う） */
+  --player-current: var(--player-size);     /* 今の桃太郎の大きさ（仲間がいれば、下の .has-allies で切り替わる） */
+  --wait-top:    58cqh;               /* 待ちのときの桃太郎の上端（移動ボタンの近く。雉の足元は、ボタンに少し重なってよい） */
+}
+
+/* 仲間がいるときは、桃太郎の大きさを切り替える（かわした鬼の高さ合わせにも使う） */
+.play-area.has-allies .lane {
+  --player-current: var(--player-size-allies);
+}
+
+/* 鬼：判定の行に、マスの左右の真ん中で出す。マスの幅より少し大きくてよい */
+.enemy-img {
+  position: absolute;
+  top: var(--enemy-top);
+  left: calc(50cqw - var(--enemy-size) / 2);
+  width: var(--enemy-size);
+  height: auto;
   object-fit: contain;
 }
 
-/* ボス戦のボス：鬼より大きく表示する（鬼の 1.5 倍） */
+/* ボス戦のボス：鬼より大きく、上に寄せて出す */
 .enemy-img.boss-img {
-  max-height: 60%;
-  width: min(210%, 60cqh);
+  top: var(--boss-top);
+  left: calc(50cqw - var(--boss-size) / 2);
+  width: var(--boss-size);
+}
+
+/* かわしたとき：鬼を下げて、桃太郎と縦の真ん中をそろえる（横に並ぶ）。
+   桃太郎は「鬼の上端＋鬼の高さの半分」に出るので、鬼を「桃太郎の高さの半分」だけ下げると、真ん中がそろう */
+.enemy-img.is-avoided {
+  top: calc(var(--enemy-top) + var(--player-current) / 2);
+}
+
+.enemy-img.boss-img.is-avoided {
+  top: calc(var(--boss-top) + var(--player-current) / 2);
 }
 
 /* 画像がない敵のための、色付きの箱と名前（予備） */
 .enemy-box {
+  position: absolute;
+  top: var(--enemy-top);
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  width: fit-content;
   padding: 8px 6px;
   border-radius: 8px;
   font-size: 14px;
@@ -376,24 +417,35 @@ body {
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6); /* 明るい色でも名前が読めるように */
 }
 
-/* 桃太郎と、後ろをついてくる仲間たち。
+/* 桃太郎と、後ろをついてくる仲間たち（いつも鬼より手前）。
    仲間は桃太郎の少し後ろ（下）に置く。1体＝真後ろ／2体＝犬と猿が横並び／3体＝犬と猿の後ろに雉 */
 .player-group {
-  position: relative;
-  width: min(120%, 40cqh);     /* マスの幅より少し大きく表示する（桃太郎の大きさ） */
+  --size: var(--player-current);
+  position: absolute;
+  z-index: 1;
+  left: calc(50cqw - var(--size) / 2);
+  width: var(--size);
+}
+
+/* 待ち（ボタンを押す前）：中央のマスの下寄り */
+.player-group.is-waiting {
+  top: var(--wait-top);
+}
+
+/* 判定：鬼の高さの半分だけ下。同じマスに鬼がいれば、鬼の下半分に重なる */
+.player-group.is-judging {
+  top: calc(var(--enemy-top) + var(--enemy-size) / 2);
+}
+
+/* ボス戦の判定：ボスの高さの半分だけ下 */
+.play-area.is-boss .player-group.is-judging {
+  top: calc(var(--boss-top) + var(--boss-size) / 2);
 }
 
 .player-group .player-img {
   display: block;
   width: 100%;
-  max-height: none;
   height: auto;
-}
-
-/* 仲間がいるとき：桃太郎も仲間もさらに大きくして、仲間が並ぶ分の余白を下にあける */
-.player-group.has-allies {
-  width: min(135%, 36cqh); /* マスが低いときは小さくする */
-  margin-bottom: 30%;
 }
 
 .player-group .ally-img {
@@ -410,27 +462,18 @@ body {
 .ally-pos-3-1 { left: 53%; top: 74%; }
 .ally-pos-3-2 { left: 27%; top: 100%; width: 42%; }
 
-/* ぶつかったとき：桃太郎（と仲間）が鬼の下半分に重なり、桃太郎が上のレイヤーに来る。
-   鬼の画像は正方形なので、鬼の高さ＝鬼の幅。その半分（と、すき間の 8px）だけ、桃太郎を上にずらす。
-   震える動きは「8. アニメーション」の hit-shake */
+/* ぶつかったとき：桃太郎が震える（「8. アニメーション」の hit-shake） */
 .lane.is-hit .player-group {
-  z-index: 1;                                      /* 桃太郎を鬼より前に出す */
-  margin-top: calc(min(120cqw, 40cqh) / -2 - 8px); /* 鬼（通常）の高さの半分 */
   animation: hit-shake 0.4s ease-in-out;
 }
 
-/* ボス戦のボスは大きいので、ボスの高さの半分 */
-.lane.is-hit:has(.boss-img) .player-group {
-  margin-top: calc(min(210cqw, 60cqh) / -2 - 8px);
-}
-
-/* 次に来る鬼：中央のマスの上側（桃太郎から見て前方）に置く */
+/* 次に来る鬼：中央のマスの上の行（桃太郎から見て前方）に置く */
 .next-enemy-img {
   position: absolute;
-  top: 2%;
+  top: var(--next-top);
   left: 50%;
   transform: translateX(-50%);
-  width: min(75%, 19cqh);
+  width: var(--next-size);
   height: auto;
   object-fit: contain;
   animation: next-enemy-float 1.6s ease-in-out infinite; /* 上下にフワフワ動く */
