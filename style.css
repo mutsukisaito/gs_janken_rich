@@ -308,7 +308,10 @@ body {
   color: #222;
 }
 
+/* 移動ボタン：雉など、プレイエリアからはみ出した画像よりも手前に表示する */
 .controls {
+  position: relative;
+  z-index: 2;
   display: flex;
   gap: 8px;
 }
