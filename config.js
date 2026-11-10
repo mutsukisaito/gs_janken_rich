@@ -25,9 +25,7 @@ const CONFIG = {
     messageBossHit: ['{boss}の攻撃を受けた！', '体力-{damage}'],
     messageCounter: ['反撃！', 'ボスに{damage}のダメージ'],
     // 顔アイコンの説明文（alt）
-    faceNormal: '普通',
-    facePain:   '痛い',
-    faceHappy:  '嬉しい',
+    faceAlts: { normal: '普通', hit: '痛い', happy: '嬉しい' }, // 状態の名前は images.faces と同じ
     // ヘッダー・バー・仲間表示
     bossStageName: 'ボス戦',
     progressBoss:  'ボスの体力 {hp} / {max}',
@@ -71,9 +69,9 @@ const CONFIG = {
   // 画像のファイル名をまとめた設定。画像を差し替えるときは、ここだけを書き換える
   images: {
     playerBack: 'img/img_player_back.png',  // 選んだマスに立つ桃太郎
-    faces: {                                // 顔アイコン（初期＝normal、当たり＝pain、回避＝happy）
+    faces: {                                // 顔アイコン（状態の名前：初期＝normal、当たり＝hit、回避＝happy）
       normal: 'img/img_face_normal.png',
-      pain:   'img/img_face_pain.png',
+      hit:    'img/img_face_pain.png',
       happy:  'img/img_face_happy.png'
     },
     bgRoad: 'img/img_bg_road.jpg',          // プレイエリアの背景（通常ステージ）

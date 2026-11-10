@@ -270,6 +270,7 @@ function render() {
   renderLanes();
   renderHp();
   renderMessage();
+  renderFace();
   renderAllies();
 }
 
@@ -339,15 +340,12 @@ function createEnemyElement(enemy, isBoss) {
 function createPlayerGroup() {
   const $group = $('<div class="player-group"></div>');
   $group.append($('<img class="player-img">').attr('src', CONFIG.images.playerBack).attr('alt', CONFIG.texts.altPlayer));
-  if (state.allies.length > 0) {
-    // 仲間がいるときは、桃太郎も仲間も大きく表示する（CSS の has-allies で決まる）
-    $group.addClass('has-allies');
-    // 仲間の数だけ後ろ姿を並べる。位置は「仲間の人数-何番目か」のクラスで決まる（CSS）
-    for (let j = 0; j < state.allies.length; j++) {
-      const ally = findAllyByName(state.allies[j]);
-      const posClass = 'ally-pos-' + state.allies.length + '-' + j;
-      $group.append($('<img class="ally-img">').addClass(posClass).attr('src', ally.back).attr('alt', ally.name));
-    }
+  // 仲間の数だけ後ろ姿を並べる。位置は「仲間の人数-何番目か」のクラスで決まる（CSS）。
+  // 仲間がいるときの桃太郎の大きさは、プレイエリアの has-allies で決まる（renderLanes）
+  for (let j = 0; j < state.allies.length; j++) {
+    const ally = findAllyByName(state.allies[j]);
+    const posClass = 'ally-pos-' + state.allies.length + '-' + j;
+    $group.append($('<img class="ally-img">').addClass(posClass).attr('src', ally.back).attr('alt', ally.name));
   }
   return $group;
 }
@@ -436,7 +434,7 @@ function renderMessageText(lines, values) {
   $('#message-detail').text(detail);
 }
 
-// メッセージと顔アイコンを表示する関数
+// メッセージを表示する関数（直前の結果に合わせて、見出しと詳細を決める）
 // 受け取る値：なし　返す値：なし
 function renderMessage() {
   const result = state.lastResult;
@@ -457,27 +455,30 @@ function renderMessage() {
     // 回避
     renderMessageText(texts.messageAvoid, {});
   }
+}
 
-  // 状態に応じて、顔の種類を決める（CONFIG.images.faces のキーと、顔の説明文）
-  let mood = 'normal';
-  let faceKey = 'normal';
-  let faceAlt = texts.faceNormal;
-  if (result !== null) {
-    if (result.isHit) {
-      mood = 'hit';    // 当たり・被弾
-      faceKey = 'pain';
-      faceAlt = texts.facePain;
-    } else {
-      mood = 'happy';  // 回避・反撃
-      faceKey = 'happy';
-      faceAlt = texts.faceHappy;
-    }
+// 直前の結果から、桃太郎の状態の名前を返す関数（顔アイコンの画像・説明文・色で共通に使う）
+// 受け取る値：result … state.lastResult
+// 返す値：'normal'（まだ選んでいない）／'hit'（当たり・被弾）／'happy'（回避・反撃）
+function getMood(result) {
+  if (result === null) {
+    return 'normal';
   }
+  if (result.isHit) {
+    return 'hit';
+  }
+  return 'happy';
+}
+
+// 顔アイコンを表示する関数（状態に合わせて、画像・説明文・色を変える）
+// 受け取る値：なし　返す値：なし
+function renderFace() {
+  const mood = getMood(state.lastResult);
 
   // 顔アイコンの画像を差し替える（表示できないときは alt の文字が出る）
-  $('#face-img').attr('src', CONFIG.images.faces[faceKey]).attr('alt', faceAlt);
+  $('#face-img').attr('src', CONFIG.images.faces[mood]).attr('alt', CONFIG.texts.faceAlts[mood]);
 
-  // 顔とメッセージのクラスを付け替える（色は CSS で決まる）
+  // 顔とメッセージの見出しのクラスを付け替える（色は CSS の mood-〜 で決まる）
   $('#face, #message-head').removeClass('mood-normal mood-hit mood-happy').addClass('mood-' + mood);
 }
 
